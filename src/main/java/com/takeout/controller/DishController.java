@@ -3,6 +3,7 @@ package com.takeout.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.takeout.entity.Dish;
+import com.takeout.entity.Merchant;
 import com.takeout.service.DishService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +41,15 @@ public class DishController {
     @GetMapping("/{dishId}")
     public Dish getDish(@PathVariable Long dishId) {
         return dishService.getById(dishId);
+    }
+    // 新增：根据菜品名称模糊搜索商户（分页）
+    // 修改后的搜索商户接口
+    @GetMapping("/search/merchants")
+    public Page<Merchant> searchMerchantsByDishName(
+            @RequestParam String dishName,
+            @RequestParam(defaultValue = "1") Long pageNum,
+            @RequestParam(defaultValue = "10") Long pageSize) {
+        return dishService.searchMerchantsByDishName(dishName, pageNum, pageSize);
     }
 
     // 根据商家ID分页查询菜品 & 支持按名称进行模糊搜索
