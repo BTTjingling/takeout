@@ -89,4 +89,36 @@ export function createOrder(data) {
     method: 'post',
     data
   })
-} 
+}
+
+// 新增取消订单功能
+export function cancelOrder(orderId) {
+  return request({
+    url: `/order/cancel/${orderId}`,
+    method: 'put'
+  })
+}
+// 新增用户注册功能
+export function register(data) {
+  return request({
+    url: '/user/register',
+    method: 'post',
+    data: {
+      username: data.username,
+      phone: data.phone,
+      password: data.password
+    }
+  })
+}
+// 新增获取订单列表
+export function getOrderList(userId) {
+  return request({
+    url: '/order/list',
+    method: 'get',
+    params: {
+      userId
+    }
+  })
+}
+
+

@@ -146,22 +146,6 @@ const viewOrderDetail = (order) => {
   dialogVisible.value = true
 }
 
-const cancelOrder = async (order) => {
-  try {
-    await ElMessageBox.confirm('确认取消该订单吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-    await cancelOrder(order.id)
-    ElMessage.success('订单已取消')
-    fetchOrders()
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('取消订单失败:', error)
-    }
-  }
-}
 
 onMounted(() => {
   fetchOrders()
