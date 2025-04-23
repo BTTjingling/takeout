@@ -7,7 +7,10 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
 @Data
 @TableName("order")
@@ -32,4 +35,15 @@ public class Order {
 
     @TableField("order_time")
     private LocalDateTime orderTime;
+
+    // 无参构造函数
+    public Order() {
+    }
+
+    // 添加 (java.lang.Long, java.util.Date, double) 构造函数
+    public Order(Long userId, Date orderDate, double totalAmount) {
+        this.userId = userId;
+        this.orderTime = LocalDateTime.ofInstant(orderDate.toInstant(), ZoneId.systemDefault());
+        this.totalAmount = BigDecimal.valueOf(totalAmount);
+    }
 }
