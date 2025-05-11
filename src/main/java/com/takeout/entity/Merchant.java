@@ -21,7 +21,7 @@ public class Merchant {
     private String description;
     private Integer status; // 0关闭，1营业
     private String address;
-
     // 评分（示例默认满分 5.0）
     private Double rating;
+    private String avatar; // 头像路径
 }

@@ -75,9 +75,9 @@ export function getMerchantList(params) {
 }
 
 // 获取菜品列表
-export function getDishList(merchantId) {
+export function getDishList(shopId) {
   return request({
-    url: `/dish/list/${merchantId}`,
+    url: `/dishes/shop/${shopId}`,
     method: 'get'
   })
 }
@@ -120,5 +120,10 @@ export function getOrderList(userId) {
     }
   })
 }
-
-
+// 获取商家详情
+export const getMerchantDetail = (shopId) => {
+  return request({
+    url: `/merchants/${shopId}`,
+    method: 'get'
+  })
+}
