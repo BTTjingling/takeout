@@ -68,14 +68,19 @@ const dishes = ref([])
 const cart = ref({})
 
 const totalQuantity = computed(() => {
-  return Object.values(cart.value).reduce((sum, quantity) => sum + quantity, 0)
-})
+  const quantity = Object.values(cart.value).reduce((sum, quantity) => sum + quantity, 0);
+  console.log('计算总数量:', quantity); // 打印计算的总数量
+  return quantity;
+});
 
 const totalPrice = computed(() => {
-  return dishes.value.reduce((sum, dish) => {
-    return sum + (dish.price * (cart.value[dish.id] || 0))
-  }, 0).toFixed(2)
-})
+  const price = dishes.value.reduce((sum, dish) => {
+    return sum + (dish.price * (cart.value[dish.dishId] || 0)); // 使用 dish.dishId 作为键
+  }, 0).toFixed(2);
+  console.log('计算总价:', price); // 打印计算的总价
+  return price;
+});
+
 
 const fetchMerchantDetail = async () => {
   try {
@@ -99,12 +104,20 @@ const fetchDishes = async () => {
 };
 
 const handleQuantityChange = (dish) => {
+  console.log('当前菜品:', dish); // 打印当前菜品信息
+  console.log('更新前购物车:', cart.value); // 打印更新前的购物车状态
+
   if (dish.quantity > 0) {
-    cart.value[dish.id] = dish.quantity
+    cart.value[dish.dishId] = dish.quantity; // 使用 dish.dishId 作为键
   } else {
-    delete cart.value[dish.id]
+    delete cart.value[dish.dishId];
   }
-}
+
+  console.log('更新后购物车:', cart.value); // 打印更新后的购物车状态
+  console.log('总数量:', totalQuantity.value); // 打印总数量
+  console.log('总价:', totalPrice.value); // 打印总价
+};
+
 
 const submitOrder = async () => {
   if (totalQuantity.value === 0) {
