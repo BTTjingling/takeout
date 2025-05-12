@@ -10,12 +10,18 @@ import com.takeout.service.MerchantService;
 import com.takeout.service.impl.MerchantServiceImpl;
 import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.beans.factory.annotation.Value;
+import java.util.UUID;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.multipart.MultipartFile;
+
 @RestController
 @RequestMapping("/api/merchants")
 public class MerchantController {
@@ -25,6 +31,8 @@ public class MerchantController {
     private MerchantService merchantService;
     @Autowired
     private DishService dishService;
+    @Value("${spring.web.upload-path}")
+    private String uploadPath;
 
     // 创建商家
     @PostMapping
@@ -88,5 +96,48 @@ public class MerchantController {
             queryWrapper.like("name", name).or().like("description", name);
         }
         return merchantService.page(page, queryWrapper);
+    }
+    @PostMapping("/uploadAvatar")
+    public ResponseEntity<?> uploadAvatar(@RequestParam Long shopId,
+                                          @RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("文件不能为空");
+        }
+
+        // 创建上传目录
+        File dir = new File(uploadPath);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        // 生成唯一文件名
+        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        File dest = new File(uploadPath + File.separator + fileName);
+
+        try {
+            file.transferTo(dest);
+
+            // 更新商家头像路径
+            Merchant merchant = merchantService.getById(shopId);
+            if (merchant != null) {
+                merchant.setAvatar(fileName);
+                merchantService.updateById(merchant);
+                return ResponseEntity.ok("头像上传并更新成功");
+            }
+            return ResponseEntity.status(404).body("商家不存在");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("上传失败");
+        }
+    }
+
+    @GetMapping("/avatar")
+    public ResponseEntity<?> getAvatar(@RequestParam Long shopId) {
+        Merchant merchant = merchantService.getById(shopId);
+        if (merchant != null && merchant.getAvatar() != null) {
+            return ResponseEntity.ok(merchant.getAvatar());
+        }
+        return ResponseEntity.status(404).body("商家头像不存在");
     }
 }

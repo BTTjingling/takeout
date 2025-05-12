@@ -15,6 +15,13 @@ const routes = [
     meta: { title: '注册' }
   },
   {
+              path: '/merchantdetail/:shopId',
+              name: 'UserMerchantDetail',
+              component: () => import('@/views/user/MerchantDetail.vue'),
+              meta: { title: '店铺详情' },
+              props: true
+  },
+  {
     path: '/user',
     component: () => import('@/views/user/Layout.vue'),
     meta: { requiresAuth: true, userType: 1 },
