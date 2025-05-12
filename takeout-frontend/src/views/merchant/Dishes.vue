@@ -38,41 +38,51 @@
     </el-pagination>
 
     <!-- 添加/编辑菜品对话框 -->
-    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible">
-      <el-form :model="form" :rules="rules" ref="form" label-width="80px">
-        <el-form-item label="菜品名称" prop="name">
-          <el-input v-model="form.name"></el-input>
-        </el-form-item>
-        <el-form-item label="价格" prop="price">
-          <el-input-number v-model="form.price" :precision="2" :step="0.1" :min="0"></el-input-number>
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input type="textarea" v-model="form.description"></el-input>
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-switch
-            v-model="form.status"
-            :active-value="1"
-            :inactive-value="0"
-            active-text="上架"
-            inactive-text="下架">
-          </el-switch>
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-      </div>
-    </el-dialog>
+    <a-modal
+        :title="dialogTitle"
+        :open="dialogVisible"
+        @ok="submitForm"
+        @cancel="dialogVisible = false"
+      >
+        <a-form :model="form" :rules="rules" ref="form">
+          <a-form-item label="菜品名称" name="name">
+            <a-input v-model:value="form.name" />
+          </a-form-item>
+          <a-form-item label="价格" name="price">
+            <a-input-number v-model:value="form.price" :precision="2" :step="0.1" :min="0" />
+          </a-form-item>
+          <a-form-item label="描述" name="description">
+            <a-textarea v-model:value="form.description" />
+          </a-form-item>
+          <a-form-item label="状态" name="status">
+            <a-switch
+              v-model:checked="form.status"
+              :checked-value="1"
+              :un-checked-value="0"
+              checked-children="上架"
+              un-checked-children="下架"
+            />
+          </a-form-item>
+        </a-form>
+      </a-modal>
   </div>
 </template>
 
 <script>
 import { getDishList, addDish, updateDish, deleteDish } from '@/api/merchant'
-
+import { Modal as AModal, Form as AForm, Input as AInput, InputNumber as AInputNumber, Switch as ASwitch, Textarea as ATextarea } from 'ant-design-vue';
 export default {
   props: ['shopId'],
   name: 'DishesManage',
+  components: {
+    AModal,
+    AForm,
+    AFormItem: AForm.Item,
+    AInput,
+    AInputNumber,
+    ASwitch,
+    ATextarea,
+  },
   data() {
     return {
       dishes: [],
@@ -130,6 +140,7 @@ export default {
       this.fetchDishes()
     },
     handleAdd() {
+      console.log('添加菜品按钮被点击')
       this.dialogTitle = '添加菜品'
       this.form = {
         shopId: this.shopId,
@@ -140,6 +151,7 @@ export default {
         status: 1
       }
       this.dialogVisible = true
+      console.log('dialogVisible:', this.dialogVisible)
     },
     handleEdit(row) {
       this.dialogTitle = '编辑菜品'
@@ -195,4 +207,9 @@ export default {
   margin-top: 20px;
   text-align: right;
 }
-</style> 
+</style>
+<style>
+.dish-dialog {
+  z-index: 2000 !important; /* 确保对话框在最上层 */
+}
+</style>
