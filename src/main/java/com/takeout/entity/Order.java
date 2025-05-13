@@ -13,7 +13,7 @@ import java.time.ZoneId;
 import java.util.Date;
 
 @Data
-@TableName("order")
+@TableName("`order`")
 public class Order {
     @TableId(value = "order_id", type = IdType.AUTO)
     private Long orderId;

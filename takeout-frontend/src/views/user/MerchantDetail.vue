@@ -118,33 +118,57 @@ const handleQuantityChange = (dish) => {
   console.log('总价:', totalPrice.value); // 打印总价
 };
 
-
 const submitOrder = async () => {
   if (totalQuantity.value === 0) {
-    ElMessage.warning('请选择菜品')
-    return
+    ElMessage.warning('请选择菜品');
+    return;
   }
 
+  console.log('开始提交订单，购物车内容:', cart.value);
+
   const orderItems = Object.entries(cart.value).map(([dishId, quantity]) => {
-    const dish = dishes.value.find(d => d.id === parseInt(dishId))
+    console.log('正在处理菜品ID:', dishId, '数量:', quantity);
+    const dish = dishes.value.find(d => d.dishId === parseInt(dishId));
+    if (!dish) {
+      console.error('未找到菜品:', dishId);
+      return null;
+    }
     return {
       dishId: parseInt(dishId),
       quantity,
       price: dish.price
-    }
-  })
+    };
+  }).filter(item => item !== null);
+
+  console.log('生成的订单项:', orderItems);
+
+  if (orderItems.length === 0) {
+    ElMessage.error('未找到有效的菜品，请重新选择');
+    return;
+  }
 
   try {
-    await createOrder({
-      merchantId: merchant.value.id,
-      items: orderItems
-    })
-    ElMessage.success('订单提交成功')
-    router.push('/user/orders')
+    for (const item of orderItems) {
+      const orderData = {
+        userId: 1, // 这里需要替换为实际的用户ID
+        shopId:  parseInt(route.params.shopId),
+        dishId: item.dishId,
+        quantity: item.quantity,
+        totalAmount: item.price * item.quantity,
+        orderTime: new Date()
+      };
+
+      console.log('提交的订单数据:', orderData);
+      await createOrder(orderData); // 为每个商品单独调用一次 createOrder
+    }
+
+    ElMessage.success('订单提交成功');
+    //router.push('/user/orders');
   } catch (error) {
-    console.error('提交订单失败:', error)
+    console.error('提交订单失败:', error);
   }
-}
+};
+
 
 onMounted(() => {
   fetchMerchantDetail()
