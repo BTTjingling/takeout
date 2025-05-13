@@ -161,7 +161,10 @@ const submitOrder = async () => {
       console.log('提交的订单数据:', orderData);
       await createOrder(orderData); // 为每个商品单独调用一次 createOrder
     }
-
+    // 重置购物车
+        cart.value = {};
+        // 重置菜品数量
+        dishes.value.forEach(dish => dish.quantity = 0);
     ElMessage.success('订单提交成功');
     //router.push('/user/orders');
   } catch (error) {
