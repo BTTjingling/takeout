@@ -2,20 +2,29 @@ com\takeout\pojo\Result.class
 com\takeout\entity\Dish.class
 com\takeout\config\MybatisPlusConfig.class
 com\takeout\service\MerchantService.class
+com\takeout\service\impl\AIServiceImpl.class
 com\takeout\service\impl\MerchantServiceImpl.class
 com\takeout\controller\DishController.class
+com\takeout\utils\DeepSeekClientUtil.class
 com\takeout\controller\TestController.class
 com\takeout\mapper\AdminMapper.class
+com\takeout\service\AIService.class
 com\takeout\service\DishService.class
+com\takeout\utils\DeepSeekClientUtil$Message.class
 com\takeout\service\impl\UserServiceImpl.class
 com\takeout\config\AppConfig.class
 com\takeout\controller\SimpleController.class
 com\takeout\mapper\AddressMapper.class
+<<<<<<< HEAD
+com\takeout\utils\DeepSeekClientUtil$Choice.class
+=======
+>>>>>>> 0391107a156c6d46599481d35f8c047c496b10f0
 com\takeout\controller\AddressController.class
 com\takeout\service\impl\DishServiceImpl.class
 com\takeout\entity\Order.class
 com\takeout\service\impl\AddressServiceImpl.class
 com\takeout\entity\Merchant.class
+com\takeout\utils\DeepSeekClientUtil$ChatResponse.class
 com\takeout\entity\Address.class
 com\takeout\entity\Admin.class
 com\takeout\service\AddressService.class
@@ -24,6 +33,7 @@ com\takeout\controller\UserController.class
 com\takeout\mapper\DishMapper.class
 com\takeout\mapper\OrderMapper.class
 com\takeout\controller\MerchantController.class
+com\takeout\utils\DeepSeekTest.class
 com\takeout\mapper\MerchantMapper.class
 com\takeout\config\WebConfig.class
 com\takeout\entity\User.class
@@ -31,4 +41,6 @@ com\takeout\exception\BusinessException.class
 com\takeout\TakeoutApplication.class
 com\takeout\mapper\UserMapper.class
 com\takeout\controller\LoginController.class
+com\takeout\utils\DeepSeekClientUtil$ChatRequest.class
+com\takeout\controller\AIController.class
 com\takeout\service\UserService.class
