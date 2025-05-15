@@ -38,6 +38,11 @@ public class MerchantServiceImpl extends ServiceImpl<MerchantMapper, Merchant> i
         }
         return baseMapper.selectPage(page, queryWrapper);
     }
+    @Override
+    public Page<Merchant> getAllMerchants(Page<Merchant> page) {
+        QueryWrapper<Merchant> queryWrapper = new QueryWrapper<>();
+        return baseMapper.selectPage(page, queryWrapper);
+    }
 
 
 }

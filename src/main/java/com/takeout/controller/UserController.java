@@ -23,4 +23,11 @@ public class UserController {
     public String submitOrder(@RequestBody Order order) {
         return userService.submitOrder(order);
     }
+    @GetMapping("/admin/all")
+    public Page<User> getAllUsersForAdmin(@RequestParam(defaultValue = "1") Long pageNum,
+                                          @RequestParam(defaultValue = "10") Long pageSize) {
+        Page<User> page = new Page<>(pageNum, pageSize);
+        return userService.getAllUsers(page);
+    }
+
 }

@@ -140,4 +140,12 @@ public class MerchantController {
         }
         return ResponseEntity.status(404).body("商家头像不存在");
     }
+
+    @GetMapping("/admin/all")
+    public Page<Merchant> getAllMerchantsForAdmin(@RequestParam(defaultValue = "1") Long pageNum,
+                                                  @RequestParam(defaultValue = "10") Long pageSize) {
+        Page<Merchant> page = new Page<>(pageNum, pageSize);
+        return merchantService.getAllMerchants(page);
+    }
+
 }
