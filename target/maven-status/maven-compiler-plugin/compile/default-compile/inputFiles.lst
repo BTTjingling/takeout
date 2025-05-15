@@ -1,5 +1,7 @@
 E:\github project\takeout\src\main\java\com\takeout\mapper\UserMapper.java
+E:\github project\takeout\src\main\java\com\takeout\controller\AIController.java
 E:\github project\takeout\src\main\java\com\takeout\controller\TestController.java
+E:\github project\takeout\src\main\java\com\takeout\utils\DeepSeekClientUtil.java
 E:\github project\takeout\src\main\java\com\takeout\service\AddressService.java
 E:\github project\takeout\src\main\java\com\takeout\entity\Admin.java
 E:\github project\takeout\src\main\java\com\takeout\service\impl\UserServiceImpl.java
@@ -25,9 +27,12 @@ E:\github project\takeout\src\main\java\com\takeout\config\WebConfig.java
 E:\github project\takeout\src\main\java\com\takeout\mapper\AdminMapper.java
 E:\github project\takeout\src\main\java\com\takeout\pojo\Result.java
 E:\github project\takeout\src\main\java\com\takeout\service\impl\DishServiceImpl.java
+E:\github project\takeout\src\main\java\com\takeout\service\AIService.java
+E:\github project\takeout\src\main\java\com\takeout\service\impl\AIServiceImpl.java
 E:\github project\takeout\src\main\java\com\takeout\entity\Merchant.java
 E:\github project\takeout\src\main\java\com\takeout\controller\UserController.java
 E:\github project\takeout\src\main\java\com\takeout\mapper\DishMapper.java
+E:\github project\takeout\src\main\java\com\takeout\utils\DeepSeekTest.java
 E:\github project\takeout\src\main\java\com\takeout\entity\Order.java
 E:\github project\takeout\src\main\java\com\takeout\entity\User.java
 E:\github project\takeout\src\main\java\com\takeout\entity\Dish.java
