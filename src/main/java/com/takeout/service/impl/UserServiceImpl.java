@@ -1,5 +1,7 @@
 package com.takeout.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.takeout.entity.User;
 import com.takeout.mapper.UserMapper;
@@ -28,5 +30,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             e.printStackTrace();
             return "订单提交失败";
         }
+    }
+    @Override
+    public Page<User> getAllUsers(Page<User> page) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        return baseMapper.selectPage(page, queryWrapper);
     }
 }

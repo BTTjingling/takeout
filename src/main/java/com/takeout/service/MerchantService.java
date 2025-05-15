@@ -8,5 +8,6 @@ import org.apache.ibatis.javassist.NotFoundException;
 public interface MerchantService extends IService<Merchant> {
     Merchant getMerchantById(Long shopId) throws NotFoundException;
     // 新增分页查询方法
+    Page<Merchant> getAllMerchants(Page<Merchant> page);
     Page<Merchant> pageMerchants(Page<Merchant> page, String name);
 }
