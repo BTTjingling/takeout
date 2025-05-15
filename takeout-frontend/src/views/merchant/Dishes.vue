@@ -19,8 +19,9 @@
           </el-tag>
         </template>
       </el-table-column>
+      <el-table-column prop="inventory" label="库存"></el-table-column> <!-- 添加库存列 -->
       <el-table-column label="操作" width="200">
-        <template v-slot:defaul="scope">
+        <template v-slot:default="scope">
           <el-button size="mini" @click="handleEdit(scope.row)">编辑</el-button>
           <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
         </template>
@@ -28,51 +29,64 @@
     </el-table>
 
     <el-pagination
-      @size-change="handleSizeChange"
-      @current-change="handleCurrentChange"
-      :current-page="page"
-      :page-sizes="[10, 20, 50, 100]"
-      :page-size="size"
-      layout="total, sizes, prev, pager, next, jumper"
-      :total="total">
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="page"
+        :page-sizes="[10, 20, 50, 100]"
+        :page-size="size"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total">
     </el-pagination>
 
     <!-- 添加/编辑菜品对话框 -->
-    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible">
-      <el-form :model="form" :rules="rules" ref="form" label-width="80px">
-        <el-form-item label="菜品名称" prop="name">
-          <el-input v-model="form.name"></el-input>
-        </el-form-item>
-        <el-form-item label="价格" prop="price">
-          <el-input-number v-model="form.price" :precision="2" :step="0.1" :min="0"></el-input-number>
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input type="textarea" v-model="form.description"></el-input>
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-switch
-            v-model="form.status"
-            :active-value="1"
-            :inactive-value="0"
-            active-text="上架"
-            inactive-text="下架">
-          </el-switch>
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-      </div>
-    </el-dialog>
+    <a-modal
+        :title="dialogTitle"
+        :open="dialogVisible"
+        @ok="submitForm"
+        @cancel="dialogVisible = false"
+    >
+      <a-form :model="form" :rules="rules" ref="form">
+        <a-form-item label="菜品名称" name="name">
+          <a-input v-model:value="form.name" />
+        </a-form-item>
+        <a-form-item label="价格" name="price">
+          <a-input-number v-model:value="form.price" :precision="2" :step="0.1" :min="0" />
+        </a-form-item>
+        <a-form-item label="描述" name="description">
+          <a-textarea v-model:value="form.description" />
+        </a-form-item>
+        <a-form-item label="库存" name="inventory"> <!-- 添加库存输入项 -->
+          <a-input-number v-model:value="form.inventory" :min="0" />
+        </a-form-item>
+        <a-form-item label="状态" name="status">
+          <a-switch
+              v-model:checked="form.status"
+              :checked-value="1"
+              :un-checked-value="0"
+              checked-children="上架"
+              un-checked-children="下架"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
 <script>
 import { getDishList, addDish, updateDish, deleteDish } from '@/api/merchant'
-
+import { Modal as AModal, Form as AForm, Input as AInput, InputNumber as AInputNumber, Switch as ASwitch, Textarea as ATextarea } from 'ant-design-vue';
 export default {
   props: ['shopId'],
   name: 'DishesManage',
+  components: {
+    AModal,
+    AForm,
+    AFormItem: AForm.Item,
+    AInput,
+    AInputNumber,
+    ASwitch,
+    ATextarea,
+  },
   data() {
     return {
       dishes: [],
@@ -87,7 +101,8 @@ export default {
         name: '',
         price: 0,
         description: '',
-        status: 1
+        status: 1,
+        inventory: 0
       },
       rules: {
         name: [
@@ -95,6 +110,10 @@ export default {
         ],
         price: [
           { required: true, message: '请输入价格', trigger: 'blur' }
+        ],
+        inventory: [ // 添加库存验证规则
+          { required: true, message: '请输入库存数量', trigger: 'blur' },
+          { type: 'number', min: 0, message: '库存不能为负数', trigger: 'blur' }
         ]
       }
     }
@@ -108,8 +127,8 @@ export default {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
         const shopId = this.shopId || userInfo?.shopId
         if (!shopId) {
-              this.$message.error('无法获取商家ID')
-              return
+          this.$message.error('无法获取商家ID')
+          return
         }
         const res = await getDishList(shopId,{
           page: this.page,
@@ -130,6 +149,7 @@ export default {
       this.fetchDishes()
     },
     handleAdd() {
+      console.log('添加菜品按钮被点击')
       this.dialogTitle = '添加菜品'
       this.form = {
         shopId: this.shopId,
@@ -137,13 +157,15 @@ export default {
         name: '',
         price: 0,
         description: '',
-        status: 1
+        status: 1,
+        inventory: 0 // 初始化库存为0
       }
       this.dialogVisible = true
+      console.log('dialogVisible:', this.dialogVisible)
     },
     handleEdit(row) {
       this.dialogTitle = '编辑菜品'
-      this.form = { ...row , shopId: this.shopId}
+      this.form = { ...row , shopId: this.shopId }
       this.dialogVisible = true
     },
     async handleDelete(row) {
@@ -195,4 +217,9 @@ export default {
   margin-top: 20px;
   text-align: right;
 }
-</style> 
+</style>
+<style>
+.dish-dialog {
+  z-index: 2000 !important; /* 确保对话框在最上层 */
+}
+</style>
