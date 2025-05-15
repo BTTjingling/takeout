@@ -19,8 +19,9 @@
           </el-tag>
         </template>
       </el-table-column>
+      <el-table-column prop="inventory" label="库存"></el-table-column> <!-- 添加库存列 -->
       <el-table-column label="操作" width="200">
-        <template v-slot:defaul="scope">
+        <template v-slot:default="scope">
           <el-button size="mini" @click="handleEdit(scope.row)">编辑</el-button>
           <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
         </template>
@@ -28,14 +29,15 @@
     </el-table>
 
     <el-pagination
-      @size-change="handleSizeChange"
-      @current-change="handleCurrentChange"
-      :current-page="page"
-      :page-sizes="[10, 20, 50, 100]"
-      :page-size="size"
-      layout="total, sizes, prev, pager, next, jumper"
-      :total="total">
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="page"
+        :page-sizes="[10, 20, 50, 100]"
+        :page-size="size"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total">
     </el-pagination>
+
 
     <!-- 添加/编辑菜品对话框 -->
     <a-modal
@@ -43,28 +45,31 @@
         :open="dialogVisible"
         @ok="submitForm"
         @cancel="dialogVisible = false"
-      >
-        <a-form :model="form" :rules="rules" ref="form">
-          <a-form-item label="菜品名称" name="name">
-            <a-input v-model:value="form.name" />
-          </a-form-item>
-          <a-form-item label="价格" name="price">
-            <a-input-number v-model:value="form.price" :precision="2" :step="0.1" :min="0" />
-          </a-form-item>
-          <a-form-item label="描述" name="description">
-            <a-textarea v-model:value="form.description" />
-          </a-form-item>
-          <a-form-item label="状态" name="status">
-            <a-switch
+    >
+      <a-form :model="form" :rules="rules" ref="form">
+        <a-form-item label="菜品名称" name="name">
+          <a-input v-model:value="form.name" />
+        </a-form-item>
+        <a-form-item label="价格" name="price">
+          <a-input-number v-model:value="form.price" :precision="2" :step="0.1" :min="0" />
+        </a-form-item>
+        <a-form-item label="描述" name="description">
+          <a-textarea v-model:value="form.description" />
+        </a-form-item>
+        <a-form-item label="库存" name="inventory">
+          <a-input-number v-model:value="form.inventory" :min="0" />
+        </a-form-item>
+        <a-form-item label="状态" name="status">
+          <a-switch
               v-model:checked="form.status"
               :checked-value="1"
               :un-checked-value="0"
               checked-children="上架"
               un-checked-children="下架"
-            />
-          </a-form-item>
-        </a-form>
-      </a-modal>
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
@@ -97,7 +102,8 @@ export default {
         name: '',
         price: 0,
         description: '',
-        status: 1
+        status: 1,
+        inventory: 0
       },
       rules: {
         name: [
@@ -105,6 +111,10 @@ export default {
         ],
         price: [
           { required: true, message: '请输入价格', trigger: 'blur' }
+        ],
+        inventory: [ // 添加库存验证规则
+          { required: true, message: '请输入库存数量', trigger: 'blur' },
+          { type: 'number', min: 0, message: '库存不能为负数', trigger: 'blur' }
         ]
       }
     }
@@ -118,8 +128,8 @@ export default {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
         const shopId = this.shopId || userInfo?.shopId
         if (!shopId) {
-              this.$message.error('无法获取商家ID')
-              return
+          this.$message.error('无法获取商家ID')
+          return
         }
         const res = await getDishList(shopId,{
           page: this.page,
@@ -148,14 +158,15 @@ export default {
         name: '',
         price: 0,
         description: '',
-        status: 1
+        status: 1,
+        inventory: 0 // 初始化库存为0
       }
       this.dialogVisible = true
       console.log('dialogVisible:', this.dialogVisible)
     },
     handleEdit(row) {
       this.dialogTitle = '编辑菜品'
-      this.form = { ...row , shopId: this.shopId}
+      this.form = { ...row , shopId: this.shopId }
       this.dialogVisible = true
     },
     async handleDelete(row) {

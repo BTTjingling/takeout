@@ -15,7 +15,10 @@ com\takeout\service\impl\UserServiceImpl.class
 com\takeout\config\AppConfig.class
 com\takeout\controller\SimpleController.class
 com\takeout\mapper\AddressMapper.class
+<<<<<<< HEAD
 com\takeout\utils\DeepSeekClientUtil$Choice.class
+=======
+>>>>>>> 0391107a156c6d46599481d35f8c047c496b10f0
 com\takeout\controller\AddressController.class
 com\takeout\service\impl\DishServiceImpl.class
 com\takeout\entity\Order.class
