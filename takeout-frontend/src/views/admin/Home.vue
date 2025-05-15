@@ -13,6 +13,10 @@
           <el-menu-item @click="activeTab = 'merchant'">
             <span>商家管理</span>
           </el-menu-item>
+          <!-- 新增订单管理菜单项 -->
+          <el-menu-item @click="activeTab = 'order'">
+            <span>订单管理</span>
+          </el-menu-item>
         </el-menu>
       </el-col>
 
@@ -21,6 +25,7 @@
         <el-tabs v-model="activeTab">
           <!-- 用户管理 tab -->
           <el-tab-pane name="user" label="用户管理">
+
             <el-card>
               <div class="clearfix">
                 <span>用户管理</span>
@@ -70,6 +75,34 @@
               </el-pagination>
             </el-card>
           </el-tab-pane>
+          <!-- 订单管理标签页 -->
+          <el-tab-pane name="order" label="订单管理">
+            <el-card>
+              <div class="clearfix">
+                <span>订单管理</span>
+                <el-button type="primary" size="small" @click="refreshOrderData">刷新</el-button>
+              </div>
+              <el-table :data="orderData" v-loading="orderLoading">
+                <!-- 订单ID：后端字段是orderId -->
+                <el-table-column prop="orderId" label="订单ID"></el-table-column>
+                <!-- 用户ID：后端字段是userId（与前端一致，无需修改） -->
+                <el-table-column prop="userId" label="用户ID"></el-table-column>
+                <!-- 商家ID：后端字段是shopId（前端原prop是merchantId） -->
+                <el-table-column prop="shopId" label="商家ID"></el-table-column>
+                <!-- 订单金额：后端字段是totalAmount（前端原prop是totalPrice） -->
+                <el-table-column prop="totalAmount" label="订单金额"></el-table-column>
+                <!-- 下单时间：后端字段是orderTime（前端原prop是createTime） -->
+                <el-table-column prop="orderTime" label="下单时间"></el-table-column>
+              </el-table>
+              <el-pagination
+                  background
+                  layout="prev, pager, next"
+                  :total="orderTotal"
+                  :page-size="pageSize"
+                  @current-change="handleOrderPageChange">
+              </el-pagination>
+            </el-card>
+          </el-tab-pane>
         </el-tabs>
       </el-col>
     </el-row>
@@ -83,6 +116,10 @@ export default {
     return {
       userData: [],
       merchantData: [],
+      orderData: [],
+      orderLoading: false,
+      orderTotal: 0,
+      currentOrderPage: 1,
       userLoading: false,
       merchantLoading: false,
       userTotal: 0,
@@ -114,6 +151,27 @@ export default {
         this.merchantLoading = false
       }
     },
+    async fetchOrderData() {
+      console.log('当前 $axios:', this.$axios); // 调试日志：检查是否为 undefined
+      this.orderLoading = true
+      try {
+        // 调用后端订单接口（根据你的OrderController路径调整）
+        const res = await this.$axios.get('/admin/orders', {
+          params: {
+            page: this.currentOrderPage,
+            pageSize: this.pageSize
+          }
+        });
+        this.orderData = res.data.records;  // 绑定订单列表到表格
+        this.orderTotal = res.data.total;
+      } catch (error) {
+        console.error('获取订单数据失败:', error)
+        this.$message.error('获取订单数据失败')
+      } finally {
+        this.orderLoading = false
+      }
+    },
+
     refreshUserData() {
       this.currentUserPage = 1
       this.fetchUserData()
@@ -129,7 +187,19 @@ export default {
     handleMerchantPageChange(page) {
       this.currentMerchantPage = page
       this.fetchMerchantData()
+    } ,
+    refreshOrderData() {
+      this.currentOrderPage = 1; // 重置为第1页
+      this.fetchOrderData();      // 重新加载数据
+    },
+    handleOrderPageChange(page) {
+      this.currentOrderPage = page; // 更新当前页码
+      this.fetchOrderData();        // 加载新页码数据
     }
+  },
+
+  created() {
+    this.fetchOrderData();
   }
 }
 </script>
