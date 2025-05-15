@@ -29,4 +29,5 @@ public class UserController {
         Page<User> page = new Page<>(pageNum, pageSize);
         return userService.getAllUsers(page);
     }
+
 }

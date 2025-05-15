@@ -147,4 +147,5 @@ public class MerchantController {
         Page<Merchant> page = new Page<>(pageNum, pageSize);
         return merchantService.getAllMerchants(page);
     }
+
 }

@@ -10,4 +10,5 @@ public interface MerchantService extends IService<Merchant> {
     // 新增分页查询方法
     Page<Merchant> getAllMerchants(Page<Merchant> page);
     Page<Merchant> pageMerchants(Page<Merchant> page, String name);
+    Page<Merchant> getAllMerchants(Page<Merchant> page);
 }
