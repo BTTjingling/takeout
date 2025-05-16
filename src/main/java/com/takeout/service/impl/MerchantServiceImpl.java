@@ -3,6 +3,7 @@ package com.takeout.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.takeout.dto.RegisterRequest;
 import com.takeout.entity.Merchant;
 import com.takeout.mapper.MerchantMapper;
 import com.takeout.service.MerchantService;
@@ -10,6 +11,7 @@ import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Service
@@ -39,10 +41,49 @@ public class MerchantServiceImpl extends ServiceImpl<MerchantMapper, Merchant> i
         return baseMapper.selectPage(page, queryWrapper);
     }
     @Override
+    public void registerMerchant(RegisterRequest request) {
+        // 检查用户名是否已存在
+        if (lambdaQuery().eq(Merchant::getName, request.getUsername()).count() > 0) {
+            logger.error("用户名已存在: {}", request.getUsername());
+            throw new RuntimeException("用户名 " + request.getUsername() + " 已被注册，请尝试其他用户名");
+        }
+
+        // 检查手机号是否已注册
+        QueryWrapper<Merchant> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("phone", request.getPhone());
+        if (count(queryWrapper) > 0) {
+            logger.error("手机号已注册: {}", request.getPhone());
+            throw new RuntimeException("手机号 " + request.getPhone() + " 已被注册，请使用其他手机号");
+        }
+
+        // 创建商家实体
+        Merchant merchant = new Merchant();
+        merchant.setName(request.getUsername()); // 使用name字段存储用户名
+        merchant.setPassword(request.getPassword());
+        merchant.setPhone(request.getPhone());
+        merchant.setStatus(0); // 默认状态为关闭
+        merchant.setRating(5.0); // 默认评分5.0
+        merchant.setAddress(""); // 默认空地址
+        merchant.setDescription(""); // 默认空描述
+        merchant.setAvatar(""); // 默认空头像路径
+
+        // 保存商家
+        save(merchant);
+    }
+
+    @Override
+    @Transactional
+    public void updateMerchantStatus(Integer shopId, Integer status) {
+        Merchant merchant = baseMapper.selectById(shopId);
+        if (merchant == null) {
+            throw new RuntimeException("商家不存在");
+        }
+        merchant.setStatus(status);
+        baseMapper.updateById(merchant);
+    }
+    @Override
     public Page<Merchant> getAllMerchants(Page<Merchant> page) {
         QueryWrapper<Merchant> queryWrapper = new QueryWrapper<>();
         return baseMapper.selectPage(page, queryWrapper);
     }
-
-
 }

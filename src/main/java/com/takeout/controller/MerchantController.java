@@ -21,7 +21,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
-
+import com.takeout.dto.UpdateStatusRequest;
 @RestController
 @RequestMapping("/api/merchants")
 public class MerchantController {
@@ -91,6 +91,8 @@ public class MerchantController {
                                         @RequestParam(required = false) String name) {
         Page<Merchant> page = new Page<>(pageNum, pageSize);
         QueryWrapper<Merchant> queryWrapper = new QueryWrapper<>();
+        // 只查询上架的商家
+        queryWrapper.eq("status", 1);
         if (name != null && !name.trim().isEmpty()) {
             // 可以利用数据库支持的全文索引或 LIKE 实现模糊查询
             queryWrapper.like("name", name).or().like("description", name);
@@ -140,12 +142,13 @@ public class MerchantController {
         }
         return ResponseEntity.status(404).body("商家头像不存在");
     }
-
-    @GetMapping("/admin/all")
-    public Page<Merchant> getAllMerchantsForAdmin(@RequestParam(defaultValue = "1") Long pageNum,
-                                                  @RequestParam(defaultValue = "10") Long pageSize) {
-        Page<Merchant> page = new Page<>(pageNum, pageSize);
-        return merchantService.getAllMerchants(page);
+    @PostMapping("/updateStatus")
+    public Result updateStatus(@RequestBody UpdateStatusRequest request) {
+        try {
+            merchantService.updateMerchantStatus(request.getShopId(), request.getStatus());
+            return Result.success("状态更新成功");
+        } catch (Exception e) {
+            return Result.error(500, e.getMessage());
+        }
     }
-
 }

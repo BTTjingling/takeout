@@ -7,6 +7,18 @@ export function getMerchantInfo(shopId) {
     method: 'get'
   })
 }
+//修改商家状态
+export function updateMerchantStatus(shopId, status) {
+  return request({
+    url: '/merchants/updateStatus',
+    method: 'post',
+    data: {
+      shopId,
+      status
+    }
+  })
+}
+
 
 // 修改商家信息
 export function updateMerchantInfo(shopId, data) {

@@ -22,4 +22,6 @@ public class Dish {
 
     // 是否上架：1-是，0-否
     private Integer isAvailable;
+
+    private Integer inventory;
 }

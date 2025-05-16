@@ -1,6 +1,7 @@
 package com.takeout.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -13,6 +14,7 @@ public class Merchant {
     private Long shopId;
 
     // 登录相关字段
+    @TableField("phone")
     private String phone;
     private String password;
 
