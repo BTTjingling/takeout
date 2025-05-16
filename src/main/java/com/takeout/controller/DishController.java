@@ -18,8 +18,13 @@ public class DishController {
     // 添加菜品
     @PostMapping
     public String createDish(@RequestBody Dish dish) {
-        boolean flag = dishService.save(dish);
-        return flag ? "菜品添加成功" : "菜品添加失败";
+        try {
+            boolean flag = dishService.save(dish);
+            return flag ? "菜品添加成功" : "菜品添加失败";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "菜品添加失败: " + e.getMessage();
+        }
     }
 
     // 删除菜品（根据 dishId 删除）
@@ -32,9 +37,14 @@ public class DishController {
     // 修改菜品信息
     @PutMapping("/{dishId}")
     public String updateDish(@PathVariable Long dishId, @RequestBody Dish dish) {
-        dish.setDishId(dishId);
-        boolean flag = dishService.updateById(dish);
-        return flag ? "菜品更新成功" : "菜品更新失败";
+        try {
+            dish.setDishId(dishId); // 确保dishId被正确设置
+            boolean flag = dishService.updateById(dish);
+            return flag ? "菜品更新成功" : "菜品更新失败";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "菜品更新失败: " + e.getMessage();
+        }
     }
 
     // 查询菜品详情

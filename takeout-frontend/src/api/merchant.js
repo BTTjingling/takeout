@@ -39,40 +39,41 @@ export function changePassword(data) {
 }
 
 // 获取菜品列表
-export function getDishList(shopId,params) {
+export function getDishList(shopId, params) {
   return request({
-    url: `/merchants/${shopId}/dishes`,
+    url: `/dishes/shop/${shopId}`,
     method: 'get',
-    params
+    params: {
+      pageNum: params.page,
+      pageSize: params.size
+    }
   })
 }
 
 // 添加菜品
 export function addDish(data) {
   return request({
-    url: `/api/merchants/${data.shopId}/dishes`,
+    url: '/dishes',
     method: 'post',
     data
   })
 }
 
-
 // 删除菜品
-export function deleteDish(shopId, dishId) { // 修正参数名
+export function deleteDish(dishId) {
   return request({
-    url: `/api/merchants/${shopId}/dishes/${dishId}`, // 补全反引号
+    url: `/dishes/${dishId}`,
     method: 'delete'
   })
 }
-
+// 更新菜品
 export function updateDish(data) {
   return request({
-    url: `/api/merchants/${data.shopId}/dishes/${data.id}`,
+    url: `/dishes/${data.dishId}`,
     method: 'put',
     data
   })
 }
-
 
 // 获取订单列表
 export function getOrderList(shopId,params) {
