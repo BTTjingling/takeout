@@ -1,5 +1,7 @@
 package com.takeout.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.takeout.dto.RegisterRequest;
 import com.takeout.entity.User;
@@ -49,5 +51,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setPhone(request.getPhone());
         // 保存用户
         save(user);
+    }
+    @Override
+    public Page<User> getAllUsers(Page<User> page) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        // 按创建时间倒序排列
+        queryWrapper.orderByDesc("create_time");
+        return baseMapper.selectPage(page, queryWrapper);
     }
 }

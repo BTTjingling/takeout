@@ -11,4 +11,5 @@ public interface MerchantService extends IService<Merchant> {
     Page<Merchant> pageMerchants(Page<Merchant> page, String name);
     void registerMerchant(RegisterRequest request);
     void updateMerchantStatus(Integer shopId, Integer status);
+    Page<Merchant> getAllMerchants(Page<Merchant> page);
 }

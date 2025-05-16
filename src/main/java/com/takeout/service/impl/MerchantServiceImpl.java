@@ -81,4 +81,9 @@ public class MerchantServiceImpl extends ServiceImpl<MerchantMapper, Merchant> i
         merchant.setStatus(status);
         baseMapper.updateById(merchant);
     }
+    @Override
+    public Page<Merchant> getAllMerchants(Page<Merchant> page) {
+        QueryWrapper<Merchant> queryWrapper = new QueryWrapper<>();
+        return baseMapper.selectPage(page, queryWrapper);
+    }
 }

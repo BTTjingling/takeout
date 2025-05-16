@@ -40,4 +40,5 @@ public class UserController {
                     .body("注册失败: " + e.getMessage());
         }
     }
+
 }

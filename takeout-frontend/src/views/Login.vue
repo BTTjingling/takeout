@@ -22,6 +22,7 @@
           <el-radio-group v-model="loginForm.role">
             <el-radio :value="'user'">用户</el-radio>
             <el-radio :value="'merchant'">商家</el-radio>
+            <el-radio :value="'admin'">管理员</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item>
