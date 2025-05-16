@@ -55,8 +55,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public Page<User> getAllUsers(Page<User> page) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        // 按创建时间倒序排列
-        queryWrapper.orderByDesc("create_time");
         return baseMapper.selectPage(page, queryWrapper);
     }
 }

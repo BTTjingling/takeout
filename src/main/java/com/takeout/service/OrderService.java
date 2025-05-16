@@ -11,4 +11,6 @@ public interface OrderService extends IService<Order> {
      * @return 分页后的订单列表
      */
     Page<Order> getAllOrders(Page<Order> page);
+    Page<Order> getOrdersByUserId(Long userId, Page<Order> page);
+    Page<Order> getOrdersByShopId(Long shopId, Page<Order> page);
 }

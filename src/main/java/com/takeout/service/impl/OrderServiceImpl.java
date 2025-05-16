@@ -17,4 +17,21 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         queryWrapper.orderByDesc("order_time");
         return baseMapper.selectPage(page, queryWrapper);
     }
+
+
+    @Override
+    public Page<Order> getOrdersByUserId(Long userId, Page<Order> page) {
+        // 创建 QueryWrapper 对象并设置查询条件
+        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId);
+        // 调用 baseMapper 的 selectPage 方法进行分页查询
+        return baseMapper.selectPage(page, queryWrapper);
+    }
+
+    @Override
+    public Page<Order> getOrdersByShopId(Long shopId, Page<Order> page) {
+        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("shop_id", shopId);
+        return baseMapper.selectPage(page, queryWrapper);
+    }
 }
