@@ -11,6 +11,14 @@
           ¥{{ scope.row.price }}
         </template>
       </el-table-column>
+
+      <!-- 新增图片列 -->
+      <el-table-column label="图片">
+        <template v-slot:default="scope">
+          <img :src="scope.row.imageUrl" alt="菜品图片" width="50" height="50" />
+        </template>
+      </el-table-column>
+      
       <el-table-column prop="description" label="描述"></el-table-column>
       <el-table-column prop="isAvailable" label="状态">
         <template v-slot:default="scope">
@@ -103,7 +111,8 @@ export default {
         price: 0,
         description: '',
         isAvailable: 1,
-        inventory: 0
+        inventory: 0,
+        imageUrl: ''  // 图片路径字段
       },
       rules: {
         name: [
