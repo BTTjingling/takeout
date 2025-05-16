@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import com.takeout.dto.ChangePasswordRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
@@ -151,4 +152,24 @@ public class MerchantController {
             return Result.error(500, e.getMessage());
         }
     }
+    /**
+     * 修改商家密码
+     * @param request 修改密码请求对象
+     * @return 操作结果
+     */
+    @PostMapping("/password")
+    public Result changePassword(@RequestBody ChangePasswordRequest request) {
+        try {
+            boolean success = merchantService.changePassword(request);
+            if (success) {
+                return Result.success("密码修改成功");
+            } else {
+                return Result.error(400, "密码修改失败，可能是商家不存在或原密码错误");
+            }
+        } catch (Exception e) {
+            logger.error("修改商家密码失败，shopId: {}", request.getShopId(), e);
+            return Result.error(500, "服务器内部错误: " + e.getMessage());
+        }
+    }
+
 }

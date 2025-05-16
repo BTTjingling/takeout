@@ -3,10 +3,12 @@ package com.takeout.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.takeout.dto.ChangePasswordRequest;
 import com.takeout.dto.RegisterRequest;
 import com.takeout.entity.Merchant;
 import com.takeout.mapper.MerchantMapper;
 import com.takeout.service.MerchantService;
+import jakarta.annotation.Resource;
 import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -14,9 +16,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
+
 @Service
 public class MerchantServiceImpl extends ServiceImpl<MerchantMapper, Merchant> implements MerchantService {
     private static final Logger logger = LoggerFactory.getLogger(MerchantServiceImpl.class);
+    @Resource
+    private MerchantMapper merchantMapper;
     @Override
     public Merchant getMerchantById(Long shopId) throws NotFoundException {
         try {
@@ -66,6 +72,8 @@ public class MerchantServiceImpl extends ServiceImpl<MerchantMapper, Merchant> i
         merchant.setAddress(""); // 默认空地址
         merchant.setDescription(""); // 默认空描述
         merchant.setAvatar(""); // 默认空头像路径
+        merchant.setDevfee(BigDecimal.valueOf(0.0));
+        merchant.setMinprice(BigDecimal.valueOf(0.0));
 
         // 保存商家
         save(merchant);
@@ -85,5 +93,20 @@ public class MerchantServiceImpl extends ServiceImpl<MerchantMapper, Merchant> i
     public Page<Merchant> getAllMerchants(Page<Merchant> page) {
         QueryWrapper<Merchant> queryWrapper = new QueryWrapper<>();
         return baseMapper.selectPage(page, queryWrapper);
+    }
+    @Override
+    public boolean changePassword(ChangePasswordRequest request) {
+        Merchant merchant = merchantMapper.selectById(request.getShopId());
+        if (merchant == null) {
+            logger.warn("商家不存在，shopId: {}", request.getShopId());
+            return false;
+        }
+        if (!merchant.getPassword().equals(request.getOldPassword())) {
+            logger.warn("原密码错误，shopId: {}", request.getShopId());
+            return false;
+        }
+        merchant.setPassword(request.getNewPassword());
+        int rows = merchantMapper.updateById(merchant);
+        return rows > 0;
     }
 }

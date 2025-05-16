@@ -17,6 +17,12 @@
         <el-form-item label="商家简介" prop="description">
           <el-input type="textarea" v-model="form.description"></el-input>
         </el-form-item>
+        <el-form-item label="起送价" prop="minprice">
+          <el-input-number v-model="form.minprice" :min="0" :precision="2" placeholder="请输入起送价"></el-input-number>
+        </el-form-item>
+        <el-form-item label="配送费" prop="devfee">
+          <el-input-number v-model="form.devfee" :min="0" :precision="2" placeholder="请输入配送费"></el-input-number>
+        </el-form-item>
         <a-form-item label="商铺状态">
           <a-switch
             v-model:checked="form.status"
@@ -90,7 +96,9 @@ export default {
         phone: '',
         address: '',
         description: '',
-        Status: 0
+        Status: 0,
+        minprice: 0.0,
+        devfee: 0.0
       },
       rules: {
         name: [
@@ -102,6 +110,14 @@ export default {
         ],
         address: [
           { required: true, message: '请输入商家地址', trigger: 'blur' }
+        ],
+        minprice: [
+          { required: true, message: '请输入起送价', trigger: 'blur' },
+          { type: 'number', min: 0, message: '起送价不能为负数', trigger: 'blur' }
+        ],
+        devfee: [
+          { required: true, message: '请输入配送费', trigger: 'blur' },
+          { type: 'number', min: 0, message: '配送费不能为负数', trigger: 'blur' }
         ],
         shopStatus: [
             { required: true, message: '请选择商铺状态' }
@@ -170,7 +186,12 @@ export default {
       this.$refs.form.validate(async (valid) => {
         if (valid) {
           try {
-            await updateMerchantInfo(this.form)
+          const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+                    if (!userInfo?.shopId) {
+                      throw new Error('未获取到商家ID')
+                    }
+
+            await updateMerchantInfo(userInfo.shopId,this.form)
             this.$message.success('保存成功')
           } catch (error) {
             console.error('更新商家信息失败:', error)
@@ -182,7 +203,12 @@ export default {
       this.$refs.passwordForm.validate(async (valid) => {
         if (valid) {
           try {
+          const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+                              if (!userInfo?.shopId) {
+                                throw new Error('未获取到商家ID')
+                              }
             await changePassword({
+              shopId: userInfo.shopId,
               oldPassword: this.passwordForm.oldPassword,
               newPassword: this.passwordForm.newPassword
             })
@@ -209,4 +235,4 @@ export default {
 .password-card {
   margin-top: 20px;
 }
-</style> 
+</style>

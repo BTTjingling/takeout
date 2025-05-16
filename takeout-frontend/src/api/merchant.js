@@ -32,8 +32,8 @@ export function updateMerchantInfo(shopId, data) {
 // 修改密码
 export function changePassword(data) {
   return request({
-    url: '/merchant/password',
-    method: 'put',
+    url: '/merchants/password',
+    method: 'post',
     data
   })
 }
