@@ -12,18 +12,18 @@
         </template>
       </el-table-column>
       <el-table-column prop="description" label="描述"></el-table-column>
-      <el-table-column prop="status" label="状态">
+      <el-table-column prop="isAvailable" label="状态">
         <template v-slot:default="scope">
-          <el-tag :type="scope.row.status === 1 ? 'success' : 'info'">
-            {{ scope.row.status === 1 ? '上架' : '下架' }}
+          <el-tag :type="scope.row.isAvailable === 1 ? 'success' : 'info'">
+            {{ scope.row.isAvailable === 1 ? '上架' : '下架' }}
           </el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="inventory" label="库存"></el-table-column> <!-- 添加库存列 -->
       <el-table-column label="操作" width="200">
         <template v-slot:default="scope">
-          <el-button size="mini" @click="handleEdit(scope.row)">编辑</el-button>
-          <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+          <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
+          <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -59,9 +59,9 @@
         <a-form-item label="库存" name="inventory">
           <a-input-number v-model:value="form.inventory" :min="0" />
         </a-form-item>
-        <a-form-item label="状态" name="status">
+        <a-form-item label="状态" name="isAvailable">
           <a-switch
-              v-model:checked="form.status"
+              v-model:checked="form.isAvailable"
               :checked-value="1"
               :un-checked-value="0"
               checked-children="上架"
@@ -102,7 +102,7 @@ export default {
         name: '',
         price: 0,
         description: '',
-        status: 1,
+        isAvailable: 1,
         inventory: 0
       },
       rules: {
@@ -158,7 +158,7 @@ export default {
         name: '',
         price: 0,
         description: '',
-        status: 1,
+        isAvailable: 1,
         inventory: 0 // 初始化库存为0
       }
       this.dialogVisible = true
@@ -166,7 +166,11 @@ export default {
     },
     handleEdit(row) {
       this.dialogTitle = '编辑菜品'
-      this.form = { ...row , shopId: this.shopId }
+      this.form = {
+            ...row,
+            id: row.dishId, // 确保 dishId 或 id 被正确赋值
+            shopId: this.shopId
+          }
       this.dialogVisible = true
     },
     async handleDelete(row) {
@@ -176,7 +180,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         })
-        await deleteDish(this.shopId, row.id)
+        await deleteDish(row.dishId)
         this.$message.success('删除成功')
         this.fetchDishes()
       } catch (error) {
@@ -185,24 +189,40 @@ export default {
         }
       }
     },
-    submitForm() {
-      this.$refs.form.validate(async (valid) => {
-        if (valid) {
-          try {
-            if (this.form.id) {
-              await updateDish(this.form)
-            } else {
-              await addDish(this.form)
-            }
-            this.$message.success('保存成功')
-            this.dialogVisible = false
-            this.fetchDishes()
-          } catch (error) {
-            console.error('保存菜品失败:', error)
+    async submitForm() {
+        try {
+          await this.$refs.form.validate()
+          const shopId = this.shopId || JSON.parse(localStorage.getItem('userInfo') || '{}')?.shopId
+          if (!shopId) {
+            throw new Error('商家ID不能为空')
           }
+
+          const dishData = {
+            name: this.form.name,
+            description: this.form.description,
+            price: this.form.price,
+            category: this.form.category || '默认分类', // 确保category字段不为null
+            isAvailable: this.form.isAvailable,
+            inventory: this.form.inventory,
+            shopId: Number(shopId)
+          }
+
+          if (this.form.id) {
+            await updateDish({
+              ...dishData,
+              dishId: this.form.id // 确保dishId被正确传递
+            })
+          } else {
+            await addDish(dishData)
+          }
+          this.$message.success('保存成功')
+          this.dialogVisible = false
+          this.fetchDishes()
+        } catch (error) {
+          console.error('保存菜品失败:', error)
+          this.$message.error(error.message || '保存菜品失败')
         }
-      })
-    }
+      }
   }
 }
 </script>
