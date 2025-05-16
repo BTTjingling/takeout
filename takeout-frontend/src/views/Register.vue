@@ -123,7 +123,13 @@ const handleRegister = async () => {
         ElMessage.success('注册成功')
         router.push('/login')
       } catch (error) {
-        console.error('注册失败:', error)
+         if (error.response && error.response.data) {
+                   // 直接显示后端返回的错误信息
+                   ElMessage.error(error.response.data)
+                 } else {
+                   // 如果后端没有返回具体信息，显示通用错误提示
+                   ElMessage.error('注册失败: ' + error.message)
+                 }
       }
     }
   })

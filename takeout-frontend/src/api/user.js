@@ -106,7 +106,8 @@ export function register(data) {
     data: {
       username: data.username,
       phone: data.phone,
-      password: data.password
+      password: data.password,
+      userType: data.userType
     }
   })
 }

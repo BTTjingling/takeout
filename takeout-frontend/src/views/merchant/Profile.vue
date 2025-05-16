@@ -2,7 +2,7 @@
   <div class="merchant-profile">
     <el-card>
       <div slot="header">
-        <span>个人信息</span>
+        <span>商铺信息</span>
       </div>
       <el-form :model="form" :rules="rules" ref="form" label-width="100px">
         <el-form-item label="商家名称" prop="name">
@@ -17,6 +17,16 @@
         <el-form-item label="商家简介" prop="description">
           <el-input type="textarea" v-model="form.description"></el-input>
         </el-form-item>
+        <a-form-item label="商铺状态">
+          <a-switch
+            v-model:checked="form.status"
+            :checked-value="1"
+            :un-checked-value="0"
+            checked-children="营业"
+            un-checked-children="歇业"
+            @change="handleStatusChange"
+          />
+        </a-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm">保存修改</el-button>
         </el-form-item>
@@ -46,10 +56,14 @@
 </template>
 
 <script>
-import { getMerchantInfo, updateMerchantInfo, changePassword } from '@/api/merchant'
-
+import { getMerchantInfo, updateMerchantInfo, changePassword ,updateMerchantStatus} from '@/api/merchant'
+import { FormItem as AFormItem, Switch as ASwitch } from 'ant-design-vue';
 export default {
   name: 'MerchantProfile',
+  components: { // 注册组件
+      AFormItem,
+      ASwitch
+    },
   data() {
     const validatePass = (rule, value, callback) => {
       if (value === '') {
@@ -75,7 +89,8 @@ export default {
         name: '',
         phone: '',
         address: '',
-        description: ''
+        description: '',
+        Status: 0
       },
       rules: {
         name: [
@@ -87,7 +102,10 @@ export default {
         ],
         address: [
           { required: true, message: '请输入商家地址', trigger: 'blur' }
-        ]
+        ],
+        shopStatus: [
+            { required: true, message: '请选择商铺状态' }
+          ]
       },
       passwordForm: {
         oldPassword: '',
@@ -123,6 +141,31 @@ export default {
         console.error('获取商家信息失败:', error)
       }
     },
+    async handleStatusChange(newStatus) {
+        try {
+          const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+          if (!userInfo?.shopId) {
+            throw new Error('未获取到商家ID')
+          }
+
+          // 调用API更新状态
+          await updateMerchantStatus(userInfo.shopId, newStatus)
+
+          // 更新成功提示
+          this.$message.success('状态更新成功')
+
+          // 更新本地状态
+          this.form.Status = newStatus
+        } catch (error) {
+          console.error('状态更新失败:', error)
+
+          // 更新失败提示
+          this.$message.error('状态更新失败: ' + (error.response?.data?.message || error.message))
+
+          // 恢复之前的状态
+          this.form.Status = this.form.Status === 1 ? 0 : 1
+        }
+      },
     submitForm() {
       this.$refs.form.validate(async (valid) => {
         if (valid) {
