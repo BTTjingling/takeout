@@ -2,42 +2,6 @@
   <div class="admin-home">
     <h1>管理员控制台</h1>
     <p>欢迎使用外卖平台管理系统</p>
-    <!-- 在 el-row 中新增统计卡片区域 -->
-    <el-row :gutter="20" class="stats-card">
-      <el-col :span="6">
-        <el-card class="box-card">
-          <div slot="header" class="clearfix">
-            <span>总用户数</span>
-          </div>
-          <div class="card-content">
-            <div class="number">{{ totalUsers }}</div>
-            <div class="label">累计注册用户</div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card class="box-card">
-          <div slot="header" class="clearfix">
-            <span>总商家数</span>
-          </div>
-          <div class="card-content">
-            <div class="number">{{ totalMerchants }}</div>
-            <div class="label">已审核商家</div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card class="box-card">
-          <div slot="header" class="clearfix">
-            <span>今日订单量</span>
-          </div>
-          <div class="card-content">
-            <div class="number">{{ todayOrders }}</div>
-            <div class="label">完成/取消比</div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
     <el-row :gutter="20" class="dashboard">
       <!-- 左侧菜单栏 -->
       <el-col :span="3" class="sidebar">
@@ -94,6 +58,7 @@
                 <el-table-column prop="name" label="店铺名称"></el-table-column>  <!-- 匹配 name -->
                 <el-table-column prop="phone" label="联系电话"></el-table-column>  <!-- 匹配 phone -->
                 <el-table-column prop="status" label="状态">  <!-- 匹配 status -->
+
                   <template #default="{row}">
                     <!-- 状态值 1 表示正常，其他表示异常（根据后端定义调整） -->
                     <el-tag :type="row.status === 1 ? 'success' : 'danger'">
@@ -164,7 +129,8 @@ export default {
       pageSize: 10,
       currentUserPage: 1,
       currentMerchantPage: 1,
-      activeTab: 'user' // 默认显示用户管理
+      activeTab: 'user',// 默认显示用户管理
+
     }
   },
   methods: {
@@ -227,6 +193,11 @@ export default {
       }
     },
 
+    // 关闭商家订单对话框时重置数据
+    resetShopOrders() {
+      this.shopOrdersData = [];
+      this.shopOrdersTotal = 0;
+    },
     refreshUserData() {
       this.currentUserPage = 1
       this.fetchUserData()
