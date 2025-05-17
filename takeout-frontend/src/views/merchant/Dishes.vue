@@ -11,6 +11,14 @@
           ¥{{ scope.row.price }}
         </template>
       </el-table-column>
+
+      <!-- 新增图片列 -->
+      <el-table-column label="图片">
+        <template v-slot:default="scope">
+          <img :src="scope.row.imageUrl" alt="菜品图片" width="50" height="50" />
+        </template>
+      </el-table-column>
+
       <el-table-column prop="description" label="描述"></el-table-column>
       <el-table-column prop="isAvailable" label="状态">
         <template v-slot:default="scope">
@@ -19,7 +27,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="inventory" label="库存"></el-table-column> <!-- 添加库存列 -->
+      <el-table-column prop="inventory" label="库存"></el-table-column>
       <el-table-column label="操作" width="200">
         <template v-slot:default="scope">
           <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
@@ -29,22 +37,21 @@
     </el-table>
 
     <el-pagination
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        :current-page="page"
-        :page-sizes="[10, 20, 50, 100]"
-        :page-size="size"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total">
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="page"
+            :page-sizes="[10, 20, 50, 100]"
+            :page-size="size"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total">
     </el-pagination>
-
 
     <!-- 添加/编辑菜品对话框 -->
     <a-modal
-        :title="dialogTitle"
-        :open="dialogVisible"
-        @ok="submitForm"
-        @cancel="dialogVisible = false"
+            :title="dialogTitle"
+            :open="dialogVisible"
+            @ok="submitForm"
+            @cancel="dialogVisible = false"
     >
       <a-form :model="form" :rules="rules" ref="form">
         <a-form-item label="菜品名称" name="name">
@@ -59,13 +66,23 @@
         <a-form-item label="库存" name="inventory">
           <a-input-number v-model:value="form.inventory" :min="0" />
         </a-form-item>
+
+        <!-- 图片上传按钮 -->
+        <a-form-item label="菜品图片" name="imageUrl">
+          <button @click="triggerFileInput">选择图片</button>
+          <input type="file" ref="fileInput" style="display:none" @change="handleFileChange" />
+          <div v-if="form.imageUrl">
+            <img :src="form.imageUrl" alt="菜品图片" width="100" height="100" />
+          </div>
+        </a-form-item>
+
         <a-form-item label="状态" name="isAvailable">
           <a-switch
-              v-model:checked="form.isAvailable"
-              :checked-value="1"
-              :un-checked-value="0"
-              checked-children="上架"
-              un-checked-children="下架"
+                  v-model:checked="form.isAvailable"
+                  :checked-value="1"
+                  :un-checked-value="0"
+                  checked-children="上架"
+                  un-checked-children="下架"
           />
         </a-form-item>
       </a-form>
@@ -74,122 +91,124 @@
 </template>
 
 <script>
-import { getDishList, addDish, updateDish, deleteDish } from '@/api/merchant'
-import { Modal as AModal, Form as AForm, Input as AInput, InputNumber as AInputNumber, Switch as ASwitch, Textarea as ATextarea } from 'ant-design-vue';
-export default {
-  props: ['shopId'],
-  name: 'DishesManage',
-  components: {
-    AModal,
-    AForm,
-    AFormItem: AForm.Item,
-    AInput,
-    AInputNumber,
-    ASwitch,
-    ATextarea,
-  },
-  data() {
-    return {
-      dishes: [],
-      page: 1,
-      size: 10,
-      total: 0,
-      dialogVisible: false,
-      dialogTitle: '',
-      form: {
-        shopId: this.shopId,
-        id: null,
-        name: '',
-        price: 0,
-        description: '',
-        isAvailable: 1,
-        inventory: 0
-      },
-      rules: {
-        name: [
-          { required: true, message: '请输入菜品名称', trigger: 'blur' }
-        ],
-        price: [
-          { required: true, message: '请输入价格', trigger: 'blur' }
-        ],
-        inventory: [ // 添加库存验证规则
-          { required: true, message: '请输入库存数量', trigger: 'blur' },
-          { type: 'number', min: 0, message: '库存不能为负数', trigger: 'blur' }
-        ]
-      }
-    }
-  },
-  created() {
-    this.fetchDishes()
-  },
-  methods: {
-    async fetchDishes() {
-      try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-        const shopId = this.shopId || userInfo?.shopId
-        if (!shopId) {
-          this.$message.error('无法获取商家ID')
-          return
+  import { getDishList, addDish, updateDish, deleteDish, uploadDishImage } from '@/api/merchant'
+  import { Modal as AModal, Form as AForm, Input as AInput, InputNumber as AInputNumber, Switch as ASwitch, Textarea as ATextarea } from 'ant-design-vue';
+
+  export default {
+    props: ['shopId'],
+    name: 'DishesManage',
+    components: {
+      AModal,
+      AForm,
+      AFormItem: AForm.Item,
+      AInput,
+      AInputNumber,
+      ASwitch,
+      ATextarea,
+    },
+    data() {
+      return {
+        dishes: [],
+        page: 1,
+        size: 10,
+        total: 0,
+        dialogVisible: false,
+        dialogTitle: '',
+        form: {
+          shopId: this.shopId,
+          id: null,
+          name: '',
+          price: 0,
+          description: '',
+          isAvailable: 1,
+          inventory: 0,
+          imageUrl: ''  // 图片路径字段
+        },
+        fileList: [],
+        rules: {
+          name: [
+            { required: true, message: '请输入菜品名称', trigger: 'blur' }
+          ],
+          price: [
+            { required: true, message: '请输入价格', trigger: 'blur' }
+          ],
+          inventory: [ // 添加库存验证规则
+            { required: true, message: '请输入库存数量', trigger: 'blur' },
+            { type: 'number', min: 0, message: '库存不能为负数', trigger: 'blur' }
+          ]
         }
-        const res = await getDishList(shopId,{
-          page: this.page,
-          size: this.size
-        })
-        this.dishes = res.data.records
-        this.total = res.data.total
-      } catch (error) {
-        console.error('获取菜品列表失败:', error)
       }
     },
-    handleSizeChange(val) {
-      this.size = val
+    created() {
       this.fetchDishes()
     },
-    handleCurrentChange(val) {
-      this.page = val
-      this.fetchDishes()
-    },
-    handleAdd() {
-      console.log('添加菜品按钮被点击')
-      this.dialogTitle = '添加菜品'
-      this.form = {
-        shopId: this.shopId,
-        id: null,
-        name: '',
-        price: 0,
-        description: '',
-        isAvailable: 1,
-        inventory: 0 // 初始化库存为0
-      }
-      this.dialogVisible = true
-      console.log('dialogVisible:', this.dialogVisible)
-    },
-    handleEdit(row) {
-      this.dialogTitle = '编辑菜品'
-      this.form = {
-            ...row,
-            id: row.dishId, // 确保 dishId 或 id 被正确赋值
-            shopId: this.shopId
+    methods: {
+      async fetchDishes() {
+        try {
+          const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+          const shopId = this.shopId || userInfo?.shopId
+          if (!shopId) {
+            this.$message.error('无法获取商家ID')
+            return
           }
-      this.dialogVisible = true
-    },
-    async handleDelete(row) {
-      try {
-        await this.$confirm('确认删除该菜品?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        })
-        await deleteDish(row.dishId)
-        this.$message.success('删除成功')
-        this.fetchDishes()
-      } catch (error) {
-        if (error !== 'cancel') {
-          console.error('删除菜品失败:', error)
+          const res = await getDishList(shopId, {
+            page: this.page,
+            size: this.size
+          })
+          this.dishes = res.data.records
+          this.total = res.data.total
+        } catch (error) {
+          console.error('获取菜品列表失败:', error)
         }
-      }
-    },
-    async submitForm() {
+      },
+      handleSizeChange(val) {
+        this.size = val
+        this.fetchDishes()
+      },
+      handleCurrentChange(val) {
+        this.page = val
+        this.fetchDishes()
+      },
+      handleAdd() {
+        console.log('添加菜品按钮被点击')
+        this.dialogTitle = '添加菜品'
+        this.form = {
+          shopId: this.shopId,
+          id: null,
+          name: '',
+          price: 0,
+          description: '',
+          isAvailable: 1,
+          inventory: 0 // 初始化库存为0
+        }
+        this.dialogVisible = true
+      },
+      handleEdit(row) {
+        this.dialogTitle = '编辑菜品'
+        this.form = {
+          ...row,
+          id: row.dishId, // 确保 dishId 或 id 被正确赋值
+          shopId: this.shopId
+        }
+        this.dialogVisible = true
+      },
+      async handleDelete(row) {
+        try {
+          await this.$confirm('确认删除该菜品?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
+          await deleteDish(row.dishId)
+          this.$message.success('删除成功')
+          this.fetchDishes()
+        } catch (error) {
+          if (error !== 'cancel') {
+            console.error('删除菜品失败:', error)
+          }
+        }
+      },
+      async submitForm() {
         try {
           await this.$refs.form.validate()
           const shopId = this.shopId || JSON.parse(localStorage.getItem('userInfo') || '{}')?.shopId
@@ -204,7 +223,8 @@ export default {
             category: this.form.category || '默认分类', // 确保category字段不为null
             isAvailable: this.form.isAvailable,
             inventory: this.form.inventory,
-            shopId: Number(shopId)
+            shopId: Number(shopId),
+            imageUrl: this.form.imageUrl // 添加图片路径字段
           }
 
           if (this.form.id) {
@@ -222,25 +242,41 @@ export default {
           console.error('保存菜品失败:', error)
           this.$message.error(error.message || '保存菜品失败')
         }
+      },
+
+      // 触发文件选择框
+      triggerFileInput() {
+        this.$refs.fileInput.click();
+      },
+
+      // 文件选择后处理
+      async handleFileChange(event) {
+        const file = event.target.files[0];  // 获取选择的文件
+        if (!file) return;
+
+        try {
+          // 调用上传图片的接口
+          const response = await uploadDishImage(file);  // 调用上传接口
+          this.form.imageUrl = Object.values(response.data).join('');  // 将数组的值拼接成字符串
+          console.log(this.form.imageUrl );  // 查看完整的返回数据
+          this.$message.success('图片上传成功');
+        } catch (error) {
+          this.$message.error('图片上传失败');
+        }
       }
+    }
   }
-}
 </script>
 
 <style scoped>
-.dishes-manage {
-  padding: 20px;
-}
-.operation-bar {
-  margin-bottom: 20px;
-}
-.el-pagination {
-  margin-top: 20px;
-  text-align: right;
-}
-</style>
-<style>
-.dish-dialog {
-  z-index: 2000 !important; /* 确保对话框在最上层 */
-}
+  .dishes-manage {
+    padding: 20px;
+  }
+  .operation-bar {
+    margin-bottom: 20px;
+  }
+  .el-pagination {
+    margin-top: 20px;
+    text-align: right;
+  }
 </style>
