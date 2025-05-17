@@ -88,7 +88,7 @@ public class DishController {
         return dishService.page(page, queryWrapper);
     }
     
-    // 上传菜品图片，并返回图片URL
+    // 上传菜品图片，并返回图片URL（还未使用）
     @PostMapping("/{dishId}/uploadImage")
     public String uploadDishImage(@PathVariable Long dishId, @RequestParam("file") MultipartFile file) {
         // 设定保存文件的目录路径
@@ -133,7 +133,7 @@ public class DishController {
         }
     }
 
-    // 获取菜品的图片URL
+    // 获取菜品的图片URL（还未使用）
     @GetMapping("/{dishId}/image")
     public String getDishImage(@PathVariable Long dishId) {
         // 添加日志
