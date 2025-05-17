@@ -31,8 +31,8 @@
               />
             </div>
             <div class="price-range">
-              <span>起送价：¥{{ merchant.minPrice }}</span>
-              <span>配送费：¥{{ merchant.deliveryFee }}</span>
+              <span>起送价：¥{{ merchant.minprice }}</span>
+              <span>配送费：¥{{ merchant.devfee }}</span>
             </div>
           </div>
         </el-card>

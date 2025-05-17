@@ -14,8 +14,8 @@
           />
         </div>
         <div class="price-range">
-          <span>起送价：¥{{ merchant.minPrice }}</span>
-          <span>配送费：¥{{ merchant.deliveryFee }}</span>
+          <span>起送价：¥{{ merchant.minprice }}</span>
+          <span>配送费：¥{{ merchant.devfee }}</span>
         </div>
       </div>
     </div>
@@ -61,7 +61,7 @@ import { useRoute } from 'vue-router'
 import { getMerchantDetail, getDishList } from '@/api/user'
 import { createOrder } from '@/api/order'
 import { ElMessage } from 'element-plus'
-
+import { getAvailableDishes } from '@/api/dish'
 const route = useRoute()
 const merchant = ref({})
 const dishes = ref([])
@@ -74,11 +74,16 @@ const totalQuantity = computed(() => {
 });
 
 const totalPrice = computed(() => {
-  const price = dishes.value.reduce((sum, dish) => {
-    return sum + (dish.price * (cart.value[dish.dishId] || 0)); // 使用 dish.dishId 作为键
-  }, 0).toFixed(2);
-  console.log('计算总价:', price); // 打印计算的总价
-  return price;
+  const dishesTotal = dishes.value.reduce((sum, dish) => {
+    return sum + (Number(dish.price) * (cart.value[dish.dishId] || 0));
+  }, 0);
+
+  // 加上配送费
+  const deliveryFee = Number(merchant.value.devfee) || 0;
+  const total = dishesTotal + deliveryFee;
+
+  console.log('计算总价:', total.toFixed(2));
+  return total.toFixed(2);
 });
 
 
@@ -93,13 +98,13 @@ const fetchMerchantDetail = async () => {
 
 const fetchDishes = async () => {
   try {
-    const res = await getDishList(route.params.shopId);
+    const res = await getAvailableDishes(1, 10); // 调用新接口，默认第1页，每页10条
     dishes.value = res.data.records.map(dish => ({
       ...dish,
       quantity: 0
     }));
   } catch (error) {
-    console.error('获取菜品列表失败:', error);
+    console.error('获取上架菜品失败:', error);
   }
 };
 

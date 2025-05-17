@@ -1,4 +1,6 @@
 package com.takeout.controller;
+import java.io.File;
+import java.io.IOException;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -52,6 +54,13 @@ public class DishController {
     @GetMapping("/{dishId}")
     public Dish getDish(@PathVariable Long dishId) {
         return dishService.getById(dishId);
+    }
+    // 新增：查询上架菜品（状态为1）
+    @GetMapping("/available")
+    public Page<Dish> listAvailableDishes(
+            @RequestParam(defaultValue = "1") Long pageNum,
+            @RequestParam(defaultValue = "10") Long pageSize) {
+        return dishService.listAvailableDishes(pageNum, pageSize);
     }
     // 新增：根据菜品名称模糊搜索商户（分页）
     // 修改后的搜索商户接口
