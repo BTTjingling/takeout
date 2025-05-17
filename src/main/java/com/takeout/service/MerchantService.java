@@ -2,6 +2,7 @@ package com.takeout.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.takeout.dto.ChangePasswordRequest;
 import com.takeout.entity.Merchant;
 import org.apache.ibatis.javassist.NotFoundException;
 import com.takeout.dto.RegisterRequest;
@@ -12,4 +13,5 @@ public interface MerchantService extends IService<Merchant> {
     void registerMerchant(RegisterRequest request);
     void updateMerchantStatus(Integer shopId, Integer status);
     Page<Merchant> getAllMerchants(Page<Merchant> page);
+    boolean changePassword(ChangePasswordRequest request);
 }

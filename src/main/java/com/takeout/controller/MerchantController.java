@@ -7,17 +7,19 @@ import com.takeout.entity.Merchant;
 import com.takeout.pojo.Result;
 import com.takeout.service.DishService;
 import com.takeout.service.MerchantService;
+import com.takeout.service.OrderService;
 import com.takeout.service.impl.MerchantServiceImpl;
 import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
-import java.util.UUID;
+
+import java.util.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+
+import com.takeout.dto.ChangePasswordRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,7 +28,9 @@ import com.takeout.dto.UpdateStatusRequest;
 @RequestMapping("/api/merchants")
 public class MerchantController {
     private static final Logger logger = LoggerFactory.getLogger(MerchantServiceImpl.class);
-
+    private static final List<String> ALLOWED_STATUSES = Arrays.asList("未接单", "已接单制作中", "配送中", "已完成", "商家已取消","用户已取消");
+    @Autowired
+    private OrderService orderService;
     @Autowired
     private MerchantService merchantService;
     @Autowired
@@ -151,4 +155,81 @@ public class MerchantController {
             return Result.error(500, e.getMessage());
         }
     }
+    /**
+     * 修改商家密码
+     * @param request 修改密码请求对象
+     * @return 操作结果
+     */
+    @PostMapping("/password")
+    public Result changePassword(@RequestBody ChangePasswordRequest request) {
+        try {
+            boolean success = merchantService.changePassword(request);
+            if (success) {
+                return Result.success("密码修改成功");
+            } else {
+                return Result.error(400, "密码修改失败，可能是商家不存在或原密码错误");
+            }
+        } catch (Exception e) {
+            logger.error("修改商家密码失败，shopId: {}", request.getShopId(), e);
+            return Result.error(500, "服务器内部错误: " + e.getMessage());
+        }
+    }
+    /**
+     * 商家更新订单状态
+     * @param orderId 订单 ID
+     * @param newStatus 新的订单状态
+     * @return 操作结果
+     */
+    @PostMapping("/orders/{orderId}/status")
+    public Result updateOrderStatus(@PathVariable Long orderId, @RequestParam String newStatus) {
+        if (!ALLOWED_STATUSES.contains(newStatus)) {
+            return Result.error(400, "不合法的订单状态值");
+        }
+        boolean success = orderService.updateOrderStatus(orderId, newStatus);
+        if (success) {
+            return Result.success("订单状态更新成功");
+        } else {
+            return Result.error(500, "订单状态更新失败");
+        }
+    }
+
+
+    // 上传菜品图片，并返回图片URL
+    @PostMapping("/uploadImage")
+    public String uploadDishImage(@RequestParam("file") MultipartFile file) {
+        // 设定保存文件的目录路径
+        String uploadDir = "E:/idea.project/takeout/takeout-frontend/public/images/";  // 你指定的保存目录
+        File dir = new File(uploadDir);
+        if (!dir.exists()) {
+            dir.mkdirs();  // 如果目录不存在则创建
+        }
+
+        // 获取上传的文件名
+        String fileName = file.getOriginalFilename();
+        if (fileName == null || fileName.isEmpty()) {
+            return "文件名为空";
+        }
+
+        // 获取当前时间戳，避免文件名重复
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        // 在文件名前加上时间戳，以确保文件名唯一
+        String newFileName = timestamp + "_" + fileName;
+
+        // 设置文件的完整路径
+        File dest = new File(uploadDir + newFileName);
+        try {
+            // 保存文件到本地
+            file.transferTo(dest);
+
+            // 返回图片的相对路径
+            String imageUrl = "/images/" + newFileName;  // 假设返回图片URL（相对路径）
+
+            // 返回图片URL
+            return imageUrl;  // 只返回图片的URL
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "图片上传失败： " + e.getMessage();
+        }
+    }
+
 }
