@@ -1,10 +1,9 @@
-// src/api/merchant.js
 import request from '@/utils/request'
 import axios from 'axios'
 // 获取上架菜品列表
-export function getAvailableDishes(pageNum, pageSize) {
+export function getAvailableDishes(shopId, pageNum, pageSize) {
   return request({
-    url: '/dishes/available',
+    url: `/dishes/shop/${shopId}/available`,
     method: 'get',
     params: {
       pageNum,

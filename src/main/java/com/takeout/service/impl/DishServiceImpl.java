@@ -30,11 +30,13 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
                 .page(page);
     }
     @Override
-    public Page<Dish> listAvailableDishes(Long pageNum, Long pageSize) {
+    public Page<Dish> listAvailableDishesByShop(Long shopId, Long pageNum, Long pageSize) {
         Page<Dish> page = new Page<>(pageNum, pageSize);
         QueryWrapper<Dish> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("is_available", 1); // 只查询状态为1的菜品
+        queryWrapper.eq("shop_id", shopId)
+                .eq("is_available", 1); // 同时满足店铺ID和上架状态
         return this.page(page, queryWrapper);
     }
+
 
 }

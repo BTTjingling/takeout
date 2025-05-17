@@ -56,11 +56,12 @@ public class DishController {
         return dishService.getById(dishId);
     }
     // 新增：查询上架菜品（状态为1）
-    @GetMapping("/available")
+    @GetMapping("/shop/{shopId}/available")
     public Page<Dish> listAvailableDishes(
+            @PathVariable Long shopId,
             @RequestParam(defaultValue = "1") Long pageNum,
             @RequestParam(defaultValue = "10") Long pageSize) {
-        return dishService.listAvailableDishes(pageNum, pageSize);
+        return dishService.listAvailableDishesByShop(shopId, pageNum, pageSize);
     }
     // 新增：根据菜品名称模糊搜索商户（分页）
     // 修改后的搜索商户接口

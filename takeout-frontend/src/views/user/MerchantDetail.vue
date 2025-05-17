@@ -49,8 +49,15 @@
       <div class="total-info">
         <span>已选 {{ totalQuantity }} 件商品</span>
         <span class="total-price">合计：¥{{ totalPrice }}</span>
+        <span v-if="!meetsMinPrice" class="min-price-warning">(菜品总价未满足起送价¥{{ merchant.minprice }})</span>
       </div>
-      <el-button type="primary" @click="submitOrder">提交订单</el-button>
+      <el-button
+          type="primary"
+          @click="submitOrder"
+          :disabled="!meetsMinPrice"
+        >
+          提交订单
+        </el-button>
     </div>
   </div>
 </template>
@@ -86,6 +93,13 @@ const totalPrice = computed(() => {
   return total.toFixed(2);
 });
 
+// 检查是否满足起送价
+const meetsMinPrice = computed(() => {
+  const dishesTotal = dishes.value.reduce((sum, dish) => {
+    return sum + (Number(dish.price) * (cart.value[dish.dishId] || 0));
+  }, 0);
+  return dishesTotal >= Number(merchant.value.minprice);
+});
 
 const fetchMerchantDetail = async () => {
   try {
@@ -98,7 +112,7 @@ const fetchMerchantDetail = async () => {
 
 const fetchDishes = async () => {
   try {
-    const res = await getAvailableDishes(1, 10); // 调用新接口，默认第1页，每页10条
+    const res = await getAvailableDishes(route.params.shopId, 1, 100);// 调用新接口，默认第1页，每页10条
     dishes.value = res.data.records.map(dish => ({
       ...dish,
       quantity: 0
@@ -231,6 +245,11 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
+.min-price-warning {
+  color: #f56c6c;
+  font-size: 12px;
+  margin-left: 8px;
+}
 .dish-image {
   width: 100%;
   height: 150px;
