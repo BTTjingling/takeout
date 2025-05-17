@@ -7,17 +7,18 @@ import com.takeout.entity.Merchant;
 import com.takeout.pojo.Result;
 import com.takeout.service.DishService;
 import com.takeout.service.MerchantService;
+import com.takeout.service.OrderService;
 import com.takeout.service.impl.MerchantServiceImpl;
 import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
-import java.util.UUID;
+
+import java.util.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+
 import com.takeout.dto.ChangePasswordRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,9 @@ import com.takeout.dto.UpdateStatusRequest;
 @RequestMapping("/api/merchants")
 public class MerchantController {
     private static final Logger logger = LoggerFactory.getLogger(MerchantServiceImpl.class);
-
+    private static final List<String> ALLOWED_STATUSES = Arrays.asList("未接单", "已接单制作中", "配送中", "已完成", "商家已取消","用户已取消");
+    @Autowired
+    private OrderService orderService;
     @Autowired
     private MerchantService merchantService;
     @Autowired
@@ -169,6 +172,24 @@ public class MerchantController {
         } catch (Exception e) {
             logger.error("修改商家密码失败，shopId: {}", request.getShopId(), e);
             return Result.error(500, "服务器内部错误: " + e.getMessage());
+        }
+    }
+    /**
+     * 商家更新订单状态
+     * @param orderId 订单 ID
+     * @param newStatus 新的订单状态
+     * @return 操作结果
+     */
+    @PostMapping("/orders/{orderId}/status")
+    public Result updateOrderStatus(@PathVariable Long orderId, @RequestParam String newStatus) {
+        if (!ALLOWED_STATUSES.contains(newStatus)) {
+            return Result.error(400, "不合法的订单状态值");
+        }
+        boolean success = orderService.updateOrderStatus(orderId, newStatus);
+        if (success) {
+            return Result.success("订单状态更新成功");
+        } else {
+            return Result.error(500, "订单状态更新失败");
         }
     }
 
