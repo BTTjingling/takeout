@@ -24,4 +24,6 @@ public class Dish {
     private Integer isAvailable;
 
     private Integer inventory;
+    private String imageUrl;
+    
 }

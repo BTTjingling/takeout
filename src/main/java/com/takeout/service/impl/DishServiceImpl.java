@@ -29,4 +29,14 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
                 .exists("SELECT 1 FROM dish WHERE shop_id = shop_id AND name LIKE {0}", "%" + dishName + "%")
                 .page(page);
     }
+    @Override
+    public Page<Dish> listAvailableDishesByShop(Long shopId, Long pageNum, Long pageSize) {
+        Page<Dish> page = new Page<>(pageNum, pageSize);
+        QueryWrapper<Dish> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("shop_id", shopId)
+                .eq("is_available", 1); // 同时满足店铺ID和上架状态
+        return this.page(page, queryWrapper);
+    }
+
+
 }
