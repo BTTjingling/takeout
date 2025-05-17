@@ -100,3 +100,18 @@ export function getStatistics(shopId) {
     method: 'get'
   })
 }
+
+// 上传菜品图片
+export function uploadDishImage(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return request({
+    url: '/merchants/uploadImage', // 后端上传接口
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data', // 需要指定为 multipart/form-data
+    }
+  })
+}
