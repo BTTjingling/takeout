@@ -12,5 +12,18 @@ public interface OrderService extends IService<Order> {
      */
     Page<Order> getAllOrders(Page<Order> page);
     Page<Order> getOrdersByUserId(Long userId, Page<Order> page);
+    /**
+     * 更新订单状态
+     * @param orderId 订单 ID
+     * @param newStatus 新的订单状态
+     * @return 更新是否成功
+     */
+    boolean updateOrderStatus(Long orderId, String newStatus);
     Page<Order> getOrdersByShopId(Long shopId, Page<Order> page);
+    /**
+     * 用户取消订单
+     * @param orderId 订单 ID
+     * @return 取消是否成功
+     */
+    boolean cancelOrder(Long orderId);
 }

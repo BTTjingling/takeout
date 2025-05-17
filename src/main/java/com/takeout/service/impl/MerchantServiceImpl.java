@@ -8,8 +8,10 @@ import com.takeout.dto.RegisterRequest;
 import com.takeout.entity.Merchant;
 import com.takeout.mapper.MerchantMapper;
 import com.takeout.service.MerchantService;
+import com.takeout.service.OrderService;
 import jakarta.annotation.Resource;
 import org.apache.ibatis.javassist.NotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,7 @@ import java.math.BigDecimal;
 @Service
 public class MerchantServiceImpl extends ServiceImpl<MerchantMapper, Merchant> implements MerchantService {
     private static final Logger logger = LoggerFactory.getLogger(MerchantServiceImpl.class);
+
     @Resource
     private MerchantMapper merchantMapper;
     @Override
@@ -109,4 +112,5 @@ public class MerchantServiceImpl extends ServiceImpl<MerchantMapper, Merchant> i
         int rows = merchantMapper.updateById(merchant);
         return rows > 0;
     }
+
 }
