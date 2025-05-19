@@ -28,7 +28,27 @@ export function updateMerchantInfo(shopId, data) {
     data
   })
 }
-
+export function uploadAvatar(data) {
+  return request({
+    url: '/merchants/uploadAvatar',
+    method: 'post',
+    data,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+/**
+ * 获取商家头像URL
+ * @param {number} shopId 商家ID
+ * @returns {Promise} 包含头像URL的Promise
+ */
+export function getAvatarUrl(shopId) {
+  return request({
+    url: `/merchants/avatar/${shopId}`,
+    method: 'get'
+  })
+}
 // 修改密码
 export function changePassword(data) {
   return request({

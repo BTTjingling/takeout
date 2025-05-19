@@ -4,6 +4,19 @@
       <div slot="header">
         <span>商铺信息</span>
       </div>
+      <div class="avatar-section">
+                    <el-upload
+                      class="avatar-uploader"
+                      action=""
+                      :show-file-list="false"
+                      :before-upload="beforeAvatarUpload"
+                      :http-request="handleAvatarUpload"
+                    >
+                      <img v-if="form.avatarUrl" :src="form.avatarUrl" class="avatar">
+                      <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                    </el-upload>
+                    <p class="avatar-tip">点击上传头像</p>
+      </div>
       <el-form :model="form" :rules="rules" ref="form" label-width="100px">
         <el-form-item label="商家名称" prop="name">
           <el-input v-model="form.name"></el-input>
@@ -62,7 +75,7 @@
 </template>
 
 <script>
-import { getMerchantInfo, updateMerchantInfo, changePassword ,updateMerchantStatus} from '@/api/merchant'
+import { getMerchantInfo, updateMerchantInfo, changePassword ,updateMerchantStatus,uploadAvatar, getAvatarUrl } from '@/api/merchant'
 import { FormItem as AFormItem, Switch as ASwitch } from 'ant-design-vue';
 export default {
   name: 'MerchantProfile',
@@ -98,7 +111,8 @@ export default {
         description: '',
         Status: 0,
         minprice: 0.0,
-        devfee: 0.0
+        devfee: 0.0,
+        avatarUrl: '/images/default-merchant.png',
       },
       rules: {
         name: [
@@ -143,20 +157,78 @@ export default {
   },
   created() {
     this.fetchMerchantInfo()
+    this.fetchAvatar()
   },
   methods: {
     async fetchMerchantInfo() {
+          try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+            if (!userInfo?.shopId) {
+              throw new Error('未获取到商家ID')
+            }
+            const res = await getMerchantInfo(userInfo.shopId)
+            this.form = res.data
+          } catch (error) {
+            console.error('获取商家信息失败:', error)
+            this.$message.error('获取商家信息失败')
+          }
+        },
+    async fetchAvatar() {
       try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'))
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
         if (!userInfo?.shopId) {
-                throw new Error('未获取到商家ID')
+          throw new Error('未获取到商家ID')
         }
-        const res = await getMerchantInfo(userInfo.shopId)
-        this.form = res.data
+        const res = await getAvatarUrl(userInfo.shopId)
+        if (res && res.data) {
+          const avatarPath = typeof res.data === 'string' ? res.data : Object.values(res.data).join('')
+          // 添加时间戳参数避免缓存
+          this.form.avatarUrl = `${avatarPath}?t=${new Date().getTime()}`
+        }
       } catch (error) {
-        console.error('获取商家信息失败:', error)
+        console.error('获取头像失败:', error)
+        this.form.avatarUrl = '/images/default-merchant.png'
       }
     },
+
+
+    beforeAvatarUpload(file) {
+        const isImage = file.type.includes('image/')
+        const isLt2M = file.size / 1024 / 1024 < 2
+
+        if (!isImage) {
+          this.$message.error('只能上传图片文件!')
+          return false
+        }
+        if (!isLt2M) {
+          this.$message.error('头像图片大小不能超过 2MB!')
+          return false
+        }
+        return true
+    },
+
+     async handleAvatarUpload({ file }) {
+       try {
+         const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+         if (!userInfo?.shopId) {
+           throw new Error('未获取到商家ID')
+         }
+
+         const formData = new FormData()
+         formData.append('file', file)
+         formData.append('shopId', userInfo.shopId)
+
+         await uploadAvatar(formData)
+         this.$message.success('头像上传成功!')
+         this.fetchAvatar() // 重新获取头像URL
+       } catch (error) {
+         console.error('头像上传失败:', error)
+         this.$message.error('头像上传失败: ' + (error.response?.data?.message || error.message))
+       }
+     },
+
+
+
     async handleStatusChange(newStatus) {
         try {
           const userInfo = JSON.parse(localStorage.getItem('userInfo'))
@@ -234,5 +306,39 @@ export default {
 }
 .password-card {
   margin-top: 20px;
+}
+.avatar-section {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.avatar-uploader {
+  display: inline-block;
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px dashed #d9d9d9;
+  cursor: pointer;
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 120px;
+  height: 120px;
+  line-height: 120px;
+  text-align: center;
+  border: 1px dashed #d9d9d9;
+  border-radius: 50%;
+}
+
+.avatar-tip {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #909399;
 }
 </style>

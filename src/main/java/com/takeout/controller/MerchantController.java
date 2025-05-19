@@ -110,17 +110,23 @@ public class MerchantController {
             return ResponseEntity.badRequest().body("文件不能为空");
         }
 
-        // 创建上传目录
-        File dir = new File(uploadPath);
+        // 修改为前端项目的public/images目录
+        String uploadDir = "E:/github project/takeout/takeout-frontend/public/images/";
+        File dir = new File(uploadDir);
         if (!dir.exists()) {
             dir.mkdirs();
         }
 
-        // 生成唯一文件名
-        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        File dest = new File(uploadPath + File.separator + fileName);
+        // 生成固定格式文件名: Avatar+shopId.png
+        String fileName = "Avatar" + shopId + ".png";
+        File dest = new File(uploadDir + fileName);
 
         try {
+            // 先删除旧的头像文件（如果存在）
+            if (dest.exists()) {
+                dest.delete();
+            }
+
             file.transferTo(dest);
 
             // 更新商家头像路径
@@ -138,13 +144,17 @@ public class MerchantController {
         }
     }
 
-    @GetMapping("/avatar")
-    public ResponseEntity<?> getAvatar(@RequestParam Long shopId) {
+
+
+    @GetMapping("/avatar/{shopId}")
+    public ResponseEntity<?> getAvatar(@PathVariable Long shopId) {
         Merchant merchant = merchantService.getById(shopId);
         if (merchant != null && merchant.getAvatar() != null) {
-            return ResponseEntity.ok(merchant.getAvatar());
+            // 修改为前端可直接访问的路径
+            String avatarUrl = "/images/" + merchant.getAvatar();
+            return ResponseEntity.ok(avatarUrl);
         }
-        return ResponseEntity.status(404).body("商家头像不存在");
+        return ResponseEntity.notFound().build();
     }
     @PostMapping("/updateStatus")
     public Result updateStatus(@RequestBody UpdateStatusRequest request) {
@@ -198,7 +208,7 @@ public class MerchantController {
     @PostMapping("/uploadImage")
     public String uploadDishImage(@RequestParam("file") MultipartFile file) {
         // 设定保存文件的目录路径
-        String uploadDir = "E:/idea.project/takeout/takeout-frontend/public/images/";  // 你指定的保存目录
+        String uploadDir = "E:/github project/takeout/takeout-frontend/public/images/";  // 你指定的保存目录
         File dir = new File(uploadDir);
         if (!dir.exists()) {
             dir.mkdirs();  // 如果目录不存在则创建

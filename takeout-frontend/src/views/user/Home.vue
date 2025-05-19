@@ -18,7 +18,12 @@
     <el-row :gutter="20">
       <el-col :span="6" v-for="merchant in merchants" :key="merchant.id">
         <el-card class="merchant-card" :body-style="{ padding: '0px' }" @click="goToMerchant(merchant.shopId)">
-          <img :src="merchant.image" class="merchant-image">
+            <div class="image-container">
+              <img :src="getAvatarUrl(merchant.avatar)"
+                    class="merchant-image"
+                    @error="handleImageError"
+              >
+            </div>
           <div class="merchant-info">
             <h3>{{ merchant.name }}</h3>
             <p class="description">{{ merchant.description }}</p>
@@ -97,7 +102,18 @@ const goToMerchant = (shopId) => {
   console.log('Shop ID:', shopId) // 调试信息
   router.push({ path: `/merchantdetail/${shopId}` })
 }
+// 添加获取头像URL的方法
+const getAvatarUrl = (avatar) => {
+  if (!avatar) return '/images/default-merchant.png';
+  // 根据实际后端配置调整URL
+  return `/images/${avatar}`;
+};
 
+// 添加图片错误处理
+const handleImageError = (e) => {
+  console.error('头像加载失败:', e);
+  e.target.src = '/images/default-merchant.png';
+};
 onMounted(() => {
   fetchMerchants()
 })
@@ -118,14 +134,23 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s;
 }
-.merchant-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+.image-container {
+  position: relative;
+  width: 100%;
+  padding-top: 75%; /* 4:3 宽高比 */
+  overflow: hidden;
 }
 .merchant-image {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 200px;
+  height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.merchant-card:hover .merchant-image {
+  transform: scale(1.1);
 }
 .merchant-info {
   padding: 14px;

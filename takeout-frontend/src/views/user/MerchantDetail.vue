@@ -1,7 +1,10 @@
 <template>
   <div class="merchant-detail">
     <div class="merchant-info">
-      <img :src="merchant.image" class="merchant-image">
+      <img :src="merchant.avatar ? '/images/' + merchant.avatar : '/images/merchant/default-merchant.png'"
+      class="merchant-avatar"
+      alt="商家头像"
+      >
       <div class="info">
         <h2>{{ merchant.name }}</h2>
         <p class="description">{{ merchant.description }}</p>
@@ -301,5 +304,28 @@ onMounted(() => {
   color: #f56c6c;
   font-size: 20px;
   font-weight: bold;
+}
+/* 新增头像样式 */
+.avatar-container {
+  width: 120px;
+  height: 120px;
+  margin-right: 20px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.merchant-avatar {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  margin-right: 20px;
+  /* 移除圆角样式 */
+  border-radius: 0;
+}
+/* 调整商家信息布局 */
+.merchant-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
 }
 </style>

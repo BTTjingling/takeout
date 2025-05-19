@@ -92,7 +92,7 @@ public class DishController {
     @PostMapping("/{dishId}/uploadImage")
     public String uploadDishImage(@PathVariable Long dishId, @RequestParam("file") MultipartFile file) {
         // 设定保存文件的目录路径
-        String uploadDir = "E:/idea.project/takeout/takeout-frontend/public/images/";  // 你指定的保存目录
+        String uploadDir = "E:/github project/takeout/takeout-frontend/public/images/";  // 你指定的保存目录
         File dir = new File(uploadDir);
         if (!dir.exists()) {
             dir.mkdirs();  // 如果目录不存在则创建
