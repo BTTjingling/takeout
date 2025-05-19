@@ -93,6 +93,15 @@
                 <el-table-column prop="shopId" label="商家ID"></el-table-column>
                 <!-- 订单金额：后端字段是totalAmount（前端原prop是totalPrice） -->
                 <el-table-column prop="totalAmount" label="订单金额"></el-table-column>
+                <el-table-column prop="ostatus" label="订单状态">
+                  <template #default="{row}">
+                    <!-- 修改2：状态值改为字符串比较（后端返回的是字符串"1"） -->
+                    <!-- 修改3：显示文本与 Order.java 的 ALLOWED_STATUSES 保持一致 -->
+                    <el-tag :type="getTagType(row.ostatus)">
+                      {{ getStatusText(row.ostatus) }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
                 <!-- 下单时间：后端字段是orderTime（前端原prop是createTime） -->
                 <el-table-column prop="orderTime" label="下单时间"></el-table-column>
               </el-table>
@@ -134,6 +143,23 @@ export default {
     }
   },
   methods: {
+    getStatusText(ostatus) {
+      const statusList = ["未接单", "已接单制作中", "配送中", "已完成", "用户已取消", "商家已取消"];
+      return statusList[parseInt(ostatus) - 1] || "未知状态";
+    },
+    // 新增：标签颜色映射方法
+    getTagType(ostatus) {
+      switch (ostatus) {
+        case "1": return "info";     // 未接单 - 蓝色
+        case "2": return "primary";  // 已接单制作中 - 紫色
+        case "3": return "warning";  // 配送中 - 黄色
+        case "4": return "success";  // 已完成 - 绿色
+        case "5": return "danger";   // 用户已取消 - 红色
+        case "6": return "danger";   // 商家已取消 - 红色
+        default: return "default";   // 未知状态 - 灰色
+      }
+    },
+
     async fetchUserData() {
       this.userLoading = true;
       try {
