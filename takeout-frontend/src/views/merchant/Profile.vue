@@ -12,8 +12,8 @@
                       :before-upload="beforeAvatarUpload"
                       :http-request="handleAvatarUpload"
                     >
-                      <img v-if="form.avatarUrl" :src="form.avatarUrl" class="avatar">
-                      <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                      <img v-if="form.avatar" :src="'/images/' + form.avatar" class="avatar">
+                      <img v-else src="/images/default-merchant.png" class="avatar">
                     </el-upload>
                     <p class="avatar-tip">点击上传头像</p>
       </div>
@@ -174,22 +174,27 @@ export default {
           }
         },
     async fetchAvatar() {
-      try {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-        if (!userInfo?.shopId) {
-          throw new Error('未获取到商家ID')
-        }
-        const res = await getAvatarUrl(userInfo.shopId)
-        if (res && res.data) {
-          const avatarPath = typeof res.data === 'string' ? res.data : Object.values(res.data).join('')
-          // 添加时间戳参数避免缓存
-          this.form.avatarUrl = `${avatarPath}?t=${new Date().getTime()}`
-        }
-      } catch (error) {
-        console.error('获取头像失败:', error)
-        this.form.avatarUrl = '/images/default-merchant.png'
-      }
-    },
+            try {
+                const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+                if (!userInfo?.shopId) {
+                    throw new Error('未获取到商家ID')
+                }
+
+                // 添加时间戳参数强制刷新
+                const timestamp = Date.now()
+                const res = await getAvatarUrl(userInfo.shopId)
+
+                if (res && res.data) {
+                    const avatarPath = typeof res.data === 'string' ? res.data : Object.values(res.data).join('')
+                    this.form.avatarUrl = `${avatarPath}?t=${timestamp}`
+                } else {
+                    this.form.avatarUrl = `/images/default-merchant.png?t=${timestamp}`
+                }
+            } catch (error) {
+                console.error('获取头像失败:', error)
+                this.form.avatarUrl = `/images/default-merchant.png?t=${Date.now()}`
+            }
+        },
 
 
     beforeAvatarUpload(file) {
@@ -220,7 +225,7 @@ export default {
 
          await uploadAvatar(formData)
          this.$message.success('头像上传成功!')
-         this.fetchAvatar() // 重新获取头像URL
+         await this.fetchAvatar()// 重新获取头像URL
        } catch (error) {
          console.error('头像上传失败:', error)
          this.$message.error('头像上传失败: ' + (error.response?.data?.message || error.message))

@@ -71,9 +71,30 @@ export function getMerchantList(params) {
     url: '/merchants/list',
     method: 'get',
     params
+    params: {
+          pageNum: params.page,
+          pageSize: params.size,
+          name: params.keyword // 将keyword改为name
+        }
   })
 }
 
+/**
+ * 根据菜品名称搜索商户
+ * @param {string} keyword 搜索关键词
+ * @returns {Promise} 包含商户列表的Promise
+ */
+export function searchMerchantsByDishName(params) {
+  return request({
+    url: '/dishes/searchMerchantsByDishName',
+    method: 'get',
+    params: {
+              pageNum: params.page,
+              pageSize: params.size,
+              keyword: params.keyword // 将keyword改为name
+            }
+  });
+}
 // 获取菜品列表
 export function getDishList(shopId) {
   return request({

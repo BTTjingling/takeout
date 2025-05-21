@@ -4,6 +4,15 @@ spring:
     url: jdbc:mysql://localhost:3306/takeout?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8
     username: root
     password: 123456
+    hikari:
+      max-lifetime: 1800000 # 设置连接最大存活时间为30分钟（单位毫秒）
+      connection-timeout: 30000 # 连接超时时间30秒
+      idle-timeout: 600000 # 空闲连接超时时间10分钟
+      minimum-idle: 5 # 最小空闲连接数
+      maximum-pool-size: 20 # 最大连接数
+      validation-timeout: 5000 # 验证连接的超时时间
+      connection-test-query: SELECT 1 # MySQL 验证查询
+
 
   web:
     resources:
