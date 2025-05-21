@@ -149,3 +149,48 @@ export const getMerchantDetail = (shopId) => {
     method: 'get'
   })
 }
+
+// 获取用户地址列表
+export function getUserAddresses(userId) {
+  return request({
+    url: `/addresses/user/${userId}`,
+    method: 'get',
+  })
+}
+// 新增用户地址
+export function addUserAddress(userId, addressData) {
+  return request({
+    url: `/addresses/user/${userId}`,
+    method: 'post',
+    data: addressData  // 地址数据
+  })
+}
+
+// 修改用户地址
+export function updateUserAddress(addressId, addressData) {
+  return request({
+    url: `/addresses/${addressId}`,
+    method: 'put',
+    data: addressData  // 更新后的地址数据
+  })
+}
+
+// 删除用户地址
+export function deleteUserAddress(addressId) {
+  return request({
+    url: `/addresses/${addressId}`,
+    method: 'delete'  // 删除地址
+  })
+}
+
+// 设置默认地址
+export function setDefaultAddress(userId, addressId) {
+  return request({
+    url: '/addresses/set-default',  // 保持一致的 URL
+    method: 'put',
+    params: {
+      userId,       // 用户ID
+      addressId     // 地址ID
+    }
+  })
+}
