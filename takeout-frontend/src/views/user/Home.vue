@@ -8,6 +8,7 @@
             placeholder="搜索商家或菜品"
             class="search-input"
             @keyup.enter="handleSearch"
+            clearable
           >
             <template #append>
               <el-button @click="handleSearch">
@@ -86,8 +87,8 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, Promotion  } from '@element-plus/icons-vue'
-import { getMerchantList } from '@/api/user'
-
+import { getMerchantList,searchMerchantsByDishName } from '@/api/user'
+import { ElMessage } from 'element-plus'
 const router = useRouter()
 const searchKeyword = ref('')
 const merchants = ref([])
@@ -109,10 +110,61 @@ const fetchMerchants = async () => {
     console.error('获取商家列表失败:', error)
   }
 }
-const handleSearch = () => {
-  page.value = 1
-  fetchMerchants()
-}
+
+const handleSearch = async () => {
+  console.log('当前搜索关键词:', searchKeyword.value); // 新增调试语句
+  page.value = 1;
+  const keyword = searchKeyword.value.trim();
+  console.log('处理后关键词:', keyword); // 新增调试语句
+
+  if (!keyword) {
+    console.log('关键词为空，执行默认搜索'); // 新增调试语句
+    await fetchMerchants();
+    return;
+  }
+
+  try {
+    // 1. 先尝试商户名搜索
+    console.log('开始商户名搜索:', keyword); // 新增调试语句
+    const merchantRes = await getMerchantList({
+      page: page.value,
+      size: size.value,
+      keyword
+    });
+
+    if (merchantRes.data.records.length > 0) {
+      console.log('商户名搜索结果:', merchantRes.data.records.length); // 新增调试语句
+      merchants.value = merchantRes.data.records;
+      total.value = merchantRes.data.total;
+      return;
+    }
+
+    // 2. 商户名搜索无结果，尝试菜品名搜索
+    console.log('商户名搜索无结果，开始菜品名搜索'); // 新增调试语句
+    const dishRes = await searchMerchantsByDishName({
+      page: page.value,
+      size: size.value,
+      keyword
+    });
+
+    if (dishRes.data.length > 0) {
+      console.log('菜品名搜索结果:', dishRes.data.length); // 新增调试语句
+      merchants.value = dishRes.data;
+      total.value = dishRes.data.length;
+      return;
+    }
+
+    // 3. 两种搜索都无结果
+    console.log('两种搜索都无结果'); // 新增调试语句
+    ElMessage.warning('没有搜索到结果');
+    searchKeyword.value = '';
+    await fetchMerchants();
+  } catch (error) {
+    console.error('搜索失败:', error);
+    ElMessage.error('搜索失败，请重试');
+  }
+};
+
 
 const handleSizeChange = (val) => {
   size.value = val
