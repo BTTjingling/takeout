@@ -15,4 +15,5 @@ public class Address {
     private String recipientPhone;
     private String fullAddress;
     private Boolean isDefault;
+    private String addressType;        // 地址类型 (家、公司、学校等)
 }
