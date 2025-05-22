@@ -27,9 +27,10 @@ export function getOrderDetail(orderId) {
 }
 
 // 取消订单
-export function cancelOrder(orderId) {
+export function apiCancelOrder(orderId) {
   return request({
-    url: `/order/cancel/${orderId}`,
+    // 使用模板字符串动态插入 orderId
+    url: `/user/orders/${orderId}/cancel`,
     method: 'post'
   })
-} 
+}

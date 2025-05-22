@@ -112,12 +112,14 @@ export function register(data) {
   })
 }
 // 新增获取订单列表
-export function getOrderList(userId) {
+export function getOrderList(userId, pageNum, pageSize) {
   return request({
-    url: '/order/list',
+    url: '/user/orders/list',
     method: 'get',
     params: {
-      userId
+      userId,
+      pageNum,
+      pageSize
     }
   })
 }

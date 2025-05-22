@@ -1,4 +1,5 @@
 package com.takeout.controller;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.takeout.dto.RegisterRequest;
 import com.takeout.entity.User;
 import com.takeout.pojo.Result;
@@ -10,9 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.takeout.service.MerchantService;
 import com.takeout.entity.Order;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class); // 定义 logger 变量
     @Autowired
     private MerchantService merchantService;
     @Autowired
@@ -57,6 +61,21 @@ public class UserController {
         } else {
             return Result.error(500, "订单取消失败");
         }
+    }
+    /**
+     * 用户查看自己的订单信息
+     * @param userId 用户 ID
+     * @param pageNum 页码，默认值为 1
+     * @param pageSize 每页数量，默认值为 10
+     * @return 分页后的订单列表
+     */
+    @GetMapping("/orders/list")
+    public Page<Order> getMyOrders(@RequestParam Long userId,
+                                   @RequestParam(defaultValue = "1") Long pageNum,
+                                   @RequestParam(defaultValue = "10") Long pageSize) {
+        logger.info("调用 getMyOrders 接口，userId: {}, pageNum: {}, pageSize: {}", userId, pageNum, pageSize);
+        Page<Order> page = new Page<>(pageNum, pageSize);
+        return orderService.getOrdersByUserId(userId, page);
     }
 
 }
