@@ -36,4 +36,34 @@ public class AddressController {
             throw new BusinessException("系统错误: " + e.getMessage());
         }
     }
+
+    // 新增地址
+    @PostMapping("/user/{userId}")
+    public void addUserAddress(@PathVariable Long userId, @RequestBody Address address) {
+        try {
+            addressService.addUserAddress(userId, address);
+        } catch (Exception e) {
+            throw new BusinessException("新增地址失败: " + e.getMessage());
+        }
+    }
+
+    // 修改地址
+    @PutMapping("{addressId}")
+    public void updateUserAddress(@PathVariable Long addressId, @RequestBody Address address) {
+        try {
+            addressService.updateUserAddress(addressId, address);
+        } catch (Exception e) {
+            throw new BusinessException("修改地址失败: " + e.getMessage());
+        }
+    }
+
+    // 删除地址
+    @DeleteMapping("{addressId}")
+    public void deleteUserAddress(@PathVariable Long addressId) {
+        try {
+            addressService.deleteUserAddress(addressId);
+        } catch (Exception e) {
+            throw new BusinessException("删除地址失败: " + e.getMessage());
+        }
+    }
 }

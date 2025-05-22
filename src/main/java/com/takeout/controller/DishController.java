@@ -1,12 +1,18 @@
 package com.takeout.controller;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.takeout.entity.Dish;
 import com.takeout.entity.Merchant;
+import com.takeout.pojo.Result;
 import com.takeout.service.DishService;
+import com.takeout.service.MerchantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +20,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/dishes")
 public class DishController {
+    @Autowired
+    private MerchantService merchantService;
 
     @Autowired
     private DishService dishService;
@@ -92,7 +100,7 @@ public class DishController {
     @PostMapping("/{dishId}/uploadImage")
     public String uploadDishImage(@PathVariable Long dishId, @RequestParam("file") MultipartFile file) {
         // 设定保存文件的目录路径
-        String uploadDir = "E:/idea.project/takeout/takeout-frontend/public/images/";  // 你指定的保存目录
+        String uploadDir = "E:/github project/takeout/takeout-frontend/public/images/";  // 你指定的保存目录
         File dir = new File(uploadDir);
         if (!dir.exists()) {
             dir.mkdirs();  // 如果目录不存在则创建
@@ -147,5 +155,35 @@ public class DishController {
             System.out.println("Dish with id " + dishId + " not found.");
             return "菜品不存在";
         }
+    }
+    @GetMapping("/searchMerchantsByDishName")
+    public Result searchMerchantsByDishName(@RequestParam String keyword) {
+        // 1. 模糊查询符合条件的菜品
+        List<Dish> dishes = dishService.lambdaQuery()
+                .like(Dish::getName, keyword)
+                .eq(Dish::getIsAvailable, 1)
+                .list();
+
+        if (dishes.isEmpty()) {
+            return Result.success(Collections.emptyList());
+        }
+
+        // 2. 获取去重后的shopId列表
+        Set<Long> shopIds = dishes.stream()
+                .map(Dish::getShopId)
+                .collect(Collectors.toSet());
+
+        // 3. 查询营业中的商铺
+        List<Merchant> merchants = merchantService.lambdaQuery()
+                .in(Merchant::getShopId, shopIds)
+                .eq(Merchant::getStatus, 1)
+                .list();
+
+        // 4. 组装返回数据
+        List<Merchant> result = merchants.stream()
+                .filter(merchant -> merchant.getStatus() == 1) // 只返回营业中的商铺(status=1)
+                .collect(Collectors.toList());
+
+        return Result.success(result);
     }
 }

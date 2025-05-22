@@ -1,16 +1,19 @@
 <template>
   <div class="merchant-detail">
     <div class="merchant-info">
-      <img :src="merchant.image" class="merchant-image">
+      <img :src="merchant.avatar ? '/images/' + merchant.avatar : '/images/merchant/default-merchant.png'"
+           class="merchant-avatar"
+           alt="商家头像"
+      >
       <div class="info">
         <h2>{{ merchant.name }}</h2>
         <p class="description">{{ merchant.description }}</p>
         <div class="rating">
           <el-rate
-            v-model="merchant.rating"
-            disabled
-            show-score
-            text-color="#ff9900"
+              v-model="merchant.rating"
+              disabled
+              show-score
+              text-color="#ff9900"
           />
         </div>
         <div class="price-range">
@@ -25,18 +28,18 @@
       <el-row :gutter="20">
         <el-col :span="8" v-for="dish in dishes" :key="dish.id">
           <el-card class="dish-card" :body-style="{ padding: '0px' }">
-            <img :src="dish.image" class="dish-image">
+            <img :src="dish.imageUrl" class="dish-image">
             <div class="dish-info">
               <h4>{{ dish.name }}</h4>
               <p class="description">{{ dish.description }}</p>
               <div class="price-action">
                 <span class="price">¥{{ dish.price }}</span>
                 <el-input-number
-                  v-model="dish.quantity"
-                  :min="0"
-                  :max="99"
-                  size="small"
-                  @change="handleQuantityChange(dish)"
+                    v-model="dish.quantity"
+                    :min="0"
+                    :max="99"
+                    size="small"
+                    @change="handleQuantityChange(dish)"
                 />
               </div>
             </div>
@@ -55,9 +58,9 @@
           type="primary"
           @click="submitOrder"
           :disabled="!meetsMinPrice"
-        >
-          提交订单
-        </el-button>
+      >
+        提交订单
+      </el-button>
     </div>
   </div>
 </template>
@@ -170,7 +173,7 @@ const submitOrder = async () => {
     for (const item of orderItems) {
       const orderData = {
         userId: 1, // 这里需要替换为实际的用户ID
-        shopId:  parseInt(route.params.shopId),
+        shopId: parseInt(route.params.shopId),
         dishId: item.dishId,
         quantity: item.quantity,
         totalAmount: item.price * item.quantity,
@@ -181,9 +184,9 @@ const submitOrder = async () => {
       await createOrder(orderData); // 为每个商品单独调用一次 createOrder
     }
     // 重置购物车
-        cart.value = {};
-        // 重置菜品数量
-        dishes.value.forEach(dish => dish.quantity = 0);
+    cart.value = {};
+    // 重置菜品数量
+    dishes.value.forEach(dish => dish.quantity = 0);
     ElMessage.success('订单提交成功');
     //router.push('/user/orders');
   } catch (error) {
@@ -208,9 +211,9 @@ onMounted(() => {
   margin-bottom: 30px;
 }
 
-.merchant-image {
-  width: 300px;
-  height: 200px;
+.merchant-avatar {
+  width: 120px;
+  height: 120px;
   object-fit: cover;
   margin-right: 20px;
 }
@@ -242,14 +245,10 @@ onMounted(() => {
 }
 
 .dish-card {
+  width: 200px;
   margin-bottom: 20px;
 }
 
-.min-price-warning {
-  color: #f56c6c;
-  font-size: 12px;
-  margin-left: 8px;
-}
 .dish-image {
   width: 100%;
   height: 150px;
@@ -258,6 +257,7 @@ onMounted(() => {
 
 .dish-info {
   padding: 14px;
+  width: 100%;
 }
 
 .dish-info h4 {
@@ -285,7 +285,7 @@ onMounted(() => {
   right: 0;
   background-color: #fff;
   padding: 15px 20px;
-  box-shadow: 0 -2px 10px rgba(0,0,0,.1);
+  box-shadow: 0 -10px 15px rgba(0, 0, 0, .1);
   display: flex;
   justify-content: space-between;
   align-items: center;

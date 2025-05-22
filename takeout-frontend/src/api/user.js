@@ -71,9 +71,30 @@ export function getMerchantList(params) {
     url: '/merchants/list',
     method: 'get',
     params
+    params: {
+          pageNum: params.page,
+          pageSize: params.size,
+          name: params.keyword // 将keyword改为name
+        }
   })
 }
 
+/**
+ * 根据菜品名称搜索商户
+ * @param {string} keyword 搜索关键词
+ * @returns {Promise} 包含商户列表的Promise
+ */
+export function searchMerchantsByDishName(params) {
+  return request({
+    url: '/dishes/searchMerchantsByDishName',
+    method: 'get',
+    params: {
+              pageNum: params.page,
+              pageSize: params.size,
+              keyword: params.keyword // 将keyword改为name
+            }
+  });
+}
 // 获取菜品列表
 export function getDishList(shopId) {
   return request({
@@ -128,5 +149,50 @@ export const getMerchantDetail = (shopId) => {
   return request({
     url: `/merchants/${shopId}`,
     method: 'get'
+  })
+}
+
+// 获取用户地址列表
+export function getUserAddresses(userId) {
+  return request({
+    url: `/addresses/user/${userId}`,
+    method: 'get',
+  })
+}
+// 新增用户地址
+export function addUserAddress(userId, addressData) {
+  return request({
+    url: `/addresses/user/${userId}`,
+    method: 'post',
+    data: addressData  // 地址数据
+  })
+}
+
+// 修改用户地址
+export function updateUserAddress(addressId, addressData) {
+  return request({
+    url: `/addresses/${addressId}`,
+    method: 'put',
+    data: addressData  // 更新后的地址数据
+  })
+}
+
+// 删除用户地址
+export function deleteUserAddress(addressId) {
+  return request({
+    url: `/addresses/${addressId}`,
+    method: 'delete'  // 删除地址
+  })
+}
+
+// 设置默认地址
+export function setDefaultAddress(userId, addressId) {
+  return request({
+    url: '/addresses/set-default',  // 保持一致的 URL
+    method: 'put',
+    params: {
+      userId,       // 用户ID
+      addressId     // 地址ID
+    }
   })
 }
