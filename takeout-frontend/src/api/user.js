@@ -70,7 +70,6 @@ export function getMerchantList(params) {
   return request({
     url: '/merchants/list',
     method: 'get',
-
     params: {
           pageNum: params.page,
           pageSize: params.size,
