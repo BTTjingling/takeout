@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.takeout.entity.Merchant;
 import com.takeout.service.MerchantService;
+
+import java.util.List;
+
 @Service
 public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements DishService {
     @Autowired
@@ -36,6 +39,10 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         queryWrapper.eq("shop_id", shopId)
                 .eq("is_available", 1); // 同时满足店铺ID和上架状态
         return this.page(page, queryWrapper);
+    }
+    @Override
+    public List<Dish> getAllDishes() {
+        return baseMapper.selectList(null);
     }
 
 

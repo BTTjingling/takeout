@@ -12,7 +12,7 @@
           >
             <template #append>
               <el-button @click="handleSearch">
-                <el-icon><search /></el-icon>
+                <el-icon><Search /></el-icon>
               </el-button>
             </template>
           </el-input>
@@ -63,7 +63,22 @@
           <h3>AI点餐助手</h3>
         </div>
         <div class="chat-messages">
-          <!-- 这里放置聊天消息 -->
+          <div v-for="(msg, index) in chatMessages" :key="index" class="chat-message">
+            <div v-if="msg.type === 'user'" class="user-message">
+              <p>{{ msg.content }}</p>
+            </div>
+            <div v-else class="ai-message">
+              <p v-if="typeof msg.content === 'string'">{{ msg.content }}</p>
+              <div v-else class="recommended-dishes">
+                <h4>推荐菜品</h4>
+                <ul>
+                  <li v-for="(dish, dishIndex) in msg.content" :key="dishIndex">
+                    {{ dish.name }} - ¥{{ dish.price }} - {{ dish.reason }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="chat-input">
           <el-input
@@ -73,7 +88,7 @@
           >
             <template #append>
               <el-button @click="sendMessage">
-                <el-icon><promotion /></el-icon>
+                <el-icon><Promotion /></el-icon>
               </el-button>
             </template>
           </el-input>
@@ -87,8 +102,9 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, Promotion  } from '@element-plus/icons-vue'
-import { getMerchantList,searchMerchantsByDishName } from '@/api/user'
+import { getMerchantList,searchMerchantsByDishName, getDishRecommendations } from '@/api/user'
 import { ElMessage } from 'element-plus'
+
 const router = useRouter()
 const searchKeyword = ref('')
 const merchants = ref([])
@@ -96,6 +112,8 @@ const page = ref(1)
 const size = ref(8)
 const total = ref(0)
 const message = ref('')
+const chatMessages = ref([]) // 存储聊天消息
+
 const fetchMerchants = async () => {
   try {
     const res = await getMerchantList({
@@ -165,7 +183,6 @@ const handleSearch = async () => {
   }
 };
 
-
 const handleSizeChange = (val) => {
   size.value = val
   fetchMerchants()
@@ -180,6 +197,7 @@ const goToMerchant = (shopId) => {
   console.log('Shop ID:', shopId) // 调试信息
   router.push({ path: `/merchantdetail/${shopId}` })
 }
+
 // 添加获取头像URL的方法
 const getAvatarUrl = (avatar) => {
   if (!avatar) return '/images/default-merchant.png';
@@ -192,11 +210,29 @@ const handleImageError = (e) => {
   console.error('头像加载失败:', e);
   e.target.src = '/images/default-merchant.png';
 };
-const sendMessage = () => {
+
+const sendMessage = async () => {
   if (message.value.trim()) {
-    console.log('发送消息:', message.value)
-    // 这里添加发送消息的逻辑
-    message.value = ''
+    // 添加用户消息到聊天记录
+    chatMessages.value.push({ type: 'user', content: message.value });
+    try {
+      // 假设用户 ID 为 1，实际使用时可从用户信息中获取
+      const userId = 1;
+      const res = await getDishRecommendations(userId, message.value);
+      if (res.data && res.data.length > 0) {
+        // 添加 AI 推荐结果到聊天记录
+        chatMessages.value.push({ type: 'ai', content: res.data });
+      } else {
+        // 添加 AI 无推荐结果消息到聊天记录
+        chatMessages.value.push({ type: 'ai', content: '没有找到符合条件的推荐菜品' });
+      }
+    } catch (error) {
+      console.error('获取推荐菜品失败:', error);
+      // 添加 AI 错误消息到聊天记录
+      chatMessages.value.push({ type: 'ai', content: '获取推荐失败，请重试' });
+      ElMessage.error('获取推荐菜品失败，请重试');
+    }
+    message.value = '';
   }
 }
 
@@ -236,6 +272,46 @@ onMounted(() => {
   flex: 1;
   overflow-y: auto;
   padding: 15px;
+}
+
+.chat-message {
+  margin-bottom: 10px;
+}
+
+.user-message p {
+  background-color: #e6f7ff;
+  padding: 8px;
+  border-radius: 4px;
+  max-width: 70%;
+  margin-left: auto;
+}
+
+.ai-message p {
+  background-color: #f0f0f0;
+  padding: 8px;
+  border-radius: 4px;
+  max-width: 70%;
+}
+
+.recommended-dishes {
+  background-color: #f0f0f0;
+  padding: 8px;
+  border-radius: 4px;
+  max-width: 70%;
+}
+
+.recommended-dishes h4 {
+  margin: 0 0 5px 0;
+}
+
+.recommended-dishes ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recommended-dishes li {
+  margin-bottom: 5px;
 }
 
 .chat-input {
@@ -376,4 +452,4 @@ onMounted(() => {
   font-size: 20px;
   font-weight: bold;
 }
-</style> 
+</style>

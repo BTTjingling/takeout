@@ -9,6 +9,8 @@ import com.takeout.mapper.OrderMapper;
 import com.takeout.service.OrderService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements OrderService {
     @Override
@@ -48,5 +50,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         updateWrapper.eq("order_id", orderId);
         updateWrapper.set("Ostatus", "用户已取消");
         return this.update(updateWrapper);
+    }
+    @Override
+    public List<Order> getOrdersByUserId(Long userId) {
+        // 实现根据用户 ID 获取所有订单的逻辑
+        return baseMapper.selectList(null);
     }
 }

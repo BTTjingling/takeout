@@ -70,7 +70,7 @@ export function getMerchantList(params) {
   return request({
     url: '/merchants/list',
     method: 'get',
-    params
+
     params: {
           pageNum: params.page,
           pageSize: params.size,
@@ -193,6 +193,22 @@ export function setDefaultAddress(userId, addressId) {
     params: {
       userId,       // 用户ID
       addressId     // 地址ID
+    }
+  })
+}
+/**
+ * 获取菜品推荐
+ * @param {number} userId 用户 ID
+ * @param {string} userRequest 用户请求内容
+ * @returns {Promise} 包含推荐菜品列表的 Promise
+ */
+export function getDishRecommendations(userId, userRequest) {
+  return request({
+    url: '/ai/recommend-dishes',
+    method: 'get',
+    params: {
+      userId,
+      userRequest
     }
   })
 }

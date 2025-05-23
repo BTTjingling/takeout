@@ -1,13 +1,13 @@
 package com.takeout.controller;
 
 import com.takeout.service.AIService;
+import com.takeout.service.RecommendationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -19,5 +19,13 @@ public class AIController {
     @PostMapping("/generate-text")
     public String generateText(@RequestBody String prompt) throws IOException {
         return aiService.generateText(prompt);
+    }
+
+    @Autowired
+    private RecommendationService recommendationService;
+
+    @GetMapping("/recommend-dishes")
+    public List<Map<String, Object>> recommendDishes(@RequestParam Long userId, @RequestParam String userRequest) {
+        return recommendationService.getRecommendations(userId, userRequest);
     }
 }
