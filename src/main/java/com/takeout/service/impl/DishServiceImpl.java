@@ -22,6 +22,11 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     public Page<Dish> getDishesByShopId(Long shopId, Page<Dish> page) {
         QueryWrapper<Dish> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("shop_id", shopId); // 严格按shop_id过滤
+        // 判空处理，如果 page 为 null，创建一个默认的分页对象
+        if (page == null) {
+            // 设置默认当前页为 1，每页显示 10 条记录
+            page = new Page<>(1, 10);
+        }
         return baseMapper.selectPage(page, queryWrapper);
     }
     @Override
