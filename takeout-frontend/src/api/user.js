@@ -51,7 +51,7 @@ export function getUserInfo(userId) {
 export function updateUserInfo(data) {
   return request({
     url: '/user/update',
-    method: 'put',
+    method: 'post',
     data
   })
 }
@@ -59,9 +59,13 @@ export function updateUserInfo(data) {
 // 修改密码
 export function changePassword(data) {
   return request({
-    url: '/user/password',
-    method: 'put',
-    data
+    url: '/user/change-password',
+    method: 'post',
+    params: {
+      userId: data.userId,
+      oldPassword: data.oldPassword,
+      newPassword: data.newPassword
+    }
   })
 }
 
