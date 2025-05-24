@@ -23,6 +23,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private MerchantMapper merchantMapper;
     @Autowired
     private DishMapper dishMapper;
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     public User getUserInfo(Long userId) {
@@ -76,5 +78,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public Page<User> getAllUsers(Page<User> page) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         return baseMapper.selectPage(page, queryWrapper);
+    }
+
+    @Override
+    public boolean changePassword(Long userId, String oldPassword, String newPassword) {
+        // 查找用户
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户未找到");
+        }
+
+        // 验证原密码是否正确
+        if (!oldPassword.equals(user.getPassword())) {  // 明文对比
+            return false; // 原密码错误
+        }
+
+        // 更新新密码
+        user.setPassword(newPassword);  // 直接更新明文密码
+        int rowsAffected = userMapper.updateById(user);  // 更新数据库
+
+        return rowsAffected > 0;  // 如果更新成功，返回true
     }
 }
