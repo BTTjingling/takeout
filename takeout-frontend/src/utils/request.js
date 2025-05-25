@@ -5,7 +5,7 @@ import router from '@/router'
 // 创建axios实例
 const service = axios.create({
   baseURL: '/api',
-  timeout: 5000,
+  timeout: 20000,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

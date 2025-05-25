@@ -11,4 +11,7 @@ public interface UserService extends IService<User> {
     void registerUser(RegisterRequest request);
     Page<User> getAllUsers(Page<User> page);
 
+    // 用户修改密码
+    boolean changePassword(Long userId, String oldPassword, String newPassword);
+
 }
