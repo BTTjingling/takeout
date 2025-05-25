@@ -54,6 +54,16 @@ public class Order {
     @TableField("dish_name")
     private String dishName; // 新增菜品名称字段
 
+    // 新增收货信息字段
+    @TableField("recipient_name")
+    private String recipientName;
+
+    @TableField("recipient_phone")
+    private String recipientPhone;
+
+    @TableField("full_address")
+    private String fullAddress;
+
 
 
     // 无参构造函数
