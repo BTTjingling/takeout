@@ -4,6 +4,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.takeout.entity.Order;
 
+import java.util.List;
+import java.util.Date;
+
+
 public interface OrderService extends IService<Order> {
     /**
      * 分页获取所有订单信息
@@ -30,4 +34,10 @@ public interface OrderService extends IService<Order> {
      * @return 取消是否成功
      */
     boolean cancelOrder(Long orderId);
-}
+    /**
+     * 根据用户 ID 获取用户所有订单信息
+     * @param userId 用户 ID
+     * @return 用户订单列表
+     */
+    List<Order> getOrdersByUserId(Long userId);
+    }

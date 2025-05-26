@@ -135,3 +135,19 @@ export function uploadDishImage(file) {
     }
   })
 }
+/**
+ * 商家 AI 助手聊天
+ * @param {number} merchantId 商家 ID
+ * @param {string} question 商家提出的问题
+ * @returns {Promise} 包含 AI 回复的 Promise
+ */
+export function merchantAIChat(merchantId, question) {
+  return request({
+    url: '/ai/merchant-chat',
+    method: 'get',
+    params: {
+      merchantId,
+      question
+    }
+  })
+}

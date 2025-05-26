@@ -3,7 +3,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/takeout?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8
     username: root
-    password: 123456
+    password: 20220060114hp
     hikari:
       max-lifetime: 1800000 # 设置连接最大存活时间为30分钟（单位毫秒）
       connection-timeout: 30000 # 连接超时时间30秒
@@ -28,3 +28,4 @@ spring:
 deepseek:
   api:
     key: sk-7f5ede4ca49c40b79db07f83bcba5241
+    url: https://api.deepseek.com/v1/chat/completions # 添加 API 地址

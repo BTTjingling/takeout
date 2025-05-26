@@ -4,37 +4,42 @@
       <div class="content-left">
         <div class="search-bar">
           <el-input
-            v-model="searchKeyword"
-            placeholder="搜索商家或菜品"
-            class="search-input"
-            @keyup.enter="handleSearch"
-            clearable
+              v-model="searchKeyword"
+              placeholder="搜索商家或菜品"
+              class="search-input"
+              @keyup.enter="handleSearch"
+              clearable
           >
             <template #append>
               <el-button @click="handleSearch">
-                <el-icon><search /></el-icon>
+                <el-icon><Search /></el-icon>
               </el-button>
             </template>
           </el-input>
         </div>
 
         <el-row :gutter="20">
-          <el-col :span="20" v-for="merchant in merchants" :key="merchant.id">
-            <el-card class="merchant-card" :body-style="{ padding: '0px' }" @click="goToMerchant(merchant.shopId)">
+          <el-col :span="24" v-for="merchant in merchants" :key="merchant.id">
+            <el-card
+                class="merchant-card"
+                :body-style="{ padding: '0px' }"
+                @click="goToMerchant(merchant.shopId)"
+            >
               <div class="card-content">
-                <img :src="getAvatarUrl(merchant.avatar)"
-                      class="merchant-image"
-                      @error="handleImageError"
+                <img
+                    :src="getAvatarUrl(merchant.avatar)"
+                    class="merchant-image"
+                    @error="handleImageError"
                 >
                 <div class="merchant-info">
                   <h3>{{ merchant.name }}</h3>
                   <p class="description">{{ merchant.description }}</p>
                   <div class="rating">
                     <el-rate
-                      v-model="merchant.rating"
-                      disabled
-                      show-score
-                      text-color="#ff9900"
+                        v-model="merchant.rating"
+                        disabled
+                        show-score
+                        text-color="#ff9900"
                     />
                   </div>
                   <div class="price-range">
@@ -48,54 +53,123 @@
         </el-row>
 
         <el-pagination
-          v-model:current-page="page"
-          v-model:page-size="size"
-          :page-sizes="[8, 16, 24, 32]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
+            v-model:current-page="page"
+            v-model:page-size="size"
+            :page-sizes="[8, 16, 24, 32]"
+            :total="total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
         />
       </div>
 
-      <div class="chat-container">
+      <div class="chat-container" ref="chatContainer" v-show="!isChatMinimized">
         <div class="chat-header">
           <h3>AI点餐助手</h3>
+          <span class="minimize-btn" @click="isChatMinimized = true">×</span>
         </div>
-        <div class="chat-messages">
-          <!-- 这里放置聊天消息 -->
-        </div>
-        <div class="chat-input">
-          <el-input
-            v-model="message"
-            placeholder="输入您的问题..."
-            @keyup.enter="sendMessage"
+
+        <div class="chat-messages" ref="chatMessages">
+          <div
+              class="message"
+              v-for="(msg, index) in chatMessagesArr"
+              :key="index"
           >
-            <template #append>
-              <el-button @click="sendMessage">
-                <el-icon><promotion /></el-icon>
-              </el-button>
-            </template>
-          </el-input>
+            <!-- AI消息 -->
+            <div v-if="msg.from === 'ai'" class="message-left">
+              <div class="message-avatar">
+                <div class="circular-avatar ai-avatar">
+                  <span class="avatar-text">AI</span>
+                </div>
+              </div>
+              <div class="message-bubble">
+                <div class="message-content" v-if="typeof msg.content === 'string'">{{ msg.content }}</div>
+                <div class="recommended-dishes" v-else>
+                  <h4>推荐菜品</h4>
+                  <ul>
+                    <li v-for="(dish, dishIndex) in msg.content" :key="dishIndex">
+                      {{ dish.name }} - ¥{{ dish.price }} - {{ dish.reason }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- 用户消息 -->
+            <div v-if="msg.from === 'me'" class="message-right">
+              <div class="message-bubble">
+                <div class="message-content">{{ msg.content }}</div>
+              </div>
+              <div class="message-avatar">
+                <div class="circular-avatar me-avatar">
+                  <span class="avatar-text">ME</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input">
+          <div class="input-container">
+            <el-input
+                v-model="message"
+                type="textarea"
+                :rows="3"
+                placeholder="输入您的问题..."
+                @keyup.enter.ctrl="sendMessage"
+                resize="none"
+            ></el-input>
+            <el-button
+                class="send-btn"
+                type="primary"
+                @click="sendMessage"
+            >
+              <el-icon class="icon"><Promotion /></el-icon>
+            </el-button>
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- 最小化按钮 -->
+    <div
+        class="minimized-chat"
+        v-show="isChatMinimized"
+        @click="restoreChat"
+    >
+      <div class="minimized-avatar">
+        {{ minimizedTitle }}
+      </div>
+      <span class="minimized-title">点餐助手</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search, Promotion  } from '@element-plus/icons-vue'
-import { getMerchantList,searchMerchantsByDishName } from '@/api/user'
+import { Search, Promotion } from '@element-plus/icons-vue'
+import { getMerchantList, searchMerchantsByDishName, getDishRecommendations } from '@/api/user'
 import { ElMessage } from 'element-plus'
+
 const router = useRouter()
+
+// 商家列表相关
 const searchKeyword = ref('')
 const merchants = ref([])
 const page = ref(1)
 const size = ref(8)
 const total = ref(0)
+
+// 聊天相关
 const message = ref('')
+const isChatMinimized = ref(false)
+const chatContainer = ref(null)
+const chatMessages = ref(null)
+const chatMessagesArr = ref([])
+const minimizedTitle = ref('AI')
+
+// 获取商家列表
 const fetchMerchants = async () => {
   try {
     const res = await getMerchantList({
@@ -103,7 +177,6 @@ const fetchMerchants = async () => {
       size: size.value,
       keyword: searchKeyword.value
     })
-    console.log('Merchants:', res.data.records) // 打印商家数据
     merchants.value = res.data.records
     total.value = res.data.total
   } catch (error) {
@@ -111,61 +184,41 @@ const fetchMerchants = async () => {
   }
 }
 
+// 搜索功能
 const handleSearch = async () => {
-  console.log('当前搜索关键词:', searchKeyword.value); // 新增调试语句
-  page.value = 1;
-  const keyword = searchKeyword.value.trim();
-  console.log('处理后关键词:', keyword); // 新增调试语句
+  page.value = 1
+  const keyword = searchKeyword.value.trim()
 
   if (!keyword) {
-    console.log('关键词为空，执行默认搜索'); // 新增调试语句
-    await fetchMerchants();
-    return;
+    await fetchMerchants()
+    return
   }
 
   try {
-    // 1. 先尝试商户名搜索
-    console.log('开始商户名搜索:', keyword); // 新增调试语句
-    const merchantRes = await getMerchantList({
-      page: page.value,
-      size: size.value,
-      keyword
-    });
-
+    const merchantRes = await getMerchantList({ page: page.value, size: size.value, keyword })
     if (merchantRes.data.records.length > 0) {
-      console.log('商户名搜索结果:', merchantRes.data.records.length); // 新增调试语句
-      merchants.value = merchantRes.data.records;
-      total.value = merchantRes.data.total;
-      return;
+      merchants.value = merchantRes.data.records
+      total.value = merchantRes.data.total
+      return
     }
 
-    // 2. 商户名搜索无结果，尝试菜品名搜索
-    console.log('商户名搜索无结果，开始菜品名搜索'); // 新增调试语句
-    const dishRes = await searchMerchantsByDishName({
-      page: page.value,
-      size: size.value,
-      keyword
-    });
-
+    const dishRes = await searchMerchantsByDishName({ page: page.value, size: size.value, keyword })
     if (dishRes.data.length > 0) {
-      console.log('菜品名搜索结果:', dishRes.data.length); // 新增调试语句
-      merchants.value = dishRes.data;
-      total.value = dishRes.data.length;
-      return;
+      merchants.value = dishRes.data
+      total.value = dishRes.data.length
+      return
     }
 
-    // 3. 两种搜索都无结果
-    console.log('两种搜索都无结果'); // 新增调试语句
-    ElMessage.warning('没有搜索到结果');
-    searchKeyword.value = '';
-    await fetchMerchants();
+    ElMessage.warning('没有搜索到结果')
+    searchKeyword.value = ''
+    await fetchMerchants()
   } catch (error) {
-    console.error('搜索失败:', error);
-    ElMessage.error('搜索失败，请重试');
+    console.error('搜索失败:', error)
+    ElMessage.error('搜索失败，请重试')
   }
-};
+}
 
-
+// 分页处理
 const handleSizeChange = (val) => {
   size.value = val
   fetchMerchants()
@@ -176,28 +229,77 @@ const handleCurrentChange = (val) => {
   fetchMerchants()
 }
 
+// 跳转商家详情
 const goToMerchant = (shopId) => {
-  console.log('Shop ID:', shopId) // 调试信息
   router.push({ path: `/merchantdetail/${shopId}` })
 }
-// 添加获取头像URL的方法
-const getAvatarUrl = (avatar) => {
-  if (!avatar) return '/images/default-merchant.png';
-  // 根据实际后端配置调整URL
-  return `/images/${avatar}`;
-};
 
-// 添加图片错误处理
+// 图片处理
+const getAvatarUrl = (avatar) => {
+  return avatar ? `/images/${avatar}` : '/images/default-merchant.png'
+}
+
 const handleImageError = (e) => {
-  console.error('头像加载失败:', e);
-  e.target.src = '/images/default-merchant.png';
-};
-const sendMessage = () => {
-  if (message.value.trim()) {
-    console.log('发送消息:', message.value)
-    // 这里添加发送消息的逻辑
-    message.value = ''
+  e.target.src = '/images/default-merchant.png'
+}
+
+// 聊天功能
+const sendMessage = async () => {
+  const content = message.value.trim()
+  if (!content) return
+
+  // 添加用户消息
+  chatMessagesArr.value.push({
+    content,
+    from: 'me'
+  })
+  message.value = ''
+
+  // 滚动到底部
+  nextTick(() => {
+    chatMessages.value.scrollTop = chatMessages.value.scrollHeight
+  })
+
+  // 获取AI回复
+  try {
+    const userId = 1 // 假设用户ID为1
+    const res = await getDishRecommendations(userId, content)
+
+    if (res.data && res.data.length > 0) {
+      // 添加AI推荐结果
+      chatMessagesArr.value.push({
+        content: res.data,
+        from: 'ai'
+      })
+    } else {
+      // 添加AI无推荐结果消息
+      chatMessagesArr.value.push({
+        content: '没有找到符合条件的推荐菜品',
+        from: 'ai'
+      })
+    }
+  } catch (error) {
+    console.error('获取推荐菜品失败:', error)
+    // 添加AI错误消息
+    chatMessagesArr.value.push({
+      content: '获取推荐失败，请重试',
+      from: 'ai'
+    })
+    ElMessage.error('获取推荐菜品失败，请重试')
   }
+
+  // 滚动到底部
+  nextTick(() => {
+    chatMessages.value.scrollTop = chatMessages.value.scrollHeight
+  })
+}
+
+// 恢复聊天窗口
+const restoreChat = () => {
+  isChatMinimized.value = false
+  nextTick(() => {
+    chatMessages.value.scrollTop = chatMessages.value.scrollHeight
+  })
 }
 
 onMounted(() => {
@@ -210,170 +312,251 @@ onMounted(() => {
   padding: 20px;
   height: calc(100vh - 60px);
 }
+
 .main-container {
   display: flex;
   height: 100%;
+  gap: 20px;
 }
+
 .content-left {
   flex: 1;
-  padding-right: 20px;
   overflow-y: auto;
 }
+
+/* 聊天容器样式 */
 .chat-container {
   width: 400px;
   border-left: 1px solid #e6e6e6;
   display: flex;
   flex-direction: column;
   height: 100%;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  background: white;
 }
+
 .chat-header {
-  padding: 15px;
-  border-bottom: 1px solid #e6e6e6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 0 20px;
+}
+
+.chat-header h3 {
+  margin: 0;
+  flex: 1;
   text-align: center;
 }
 
+.minimize-btn {
+  cursor: pointer;
+  font-size: 20px;
+}
+
+/* 消息区样式 */
 .chat-messages {
   flex: 1;
+  padding: 15px;
   overflow-y: auto;
-  padding: 15px;
+  background: #f8f9fa;
 }
 
-.chat-input {
-  padding: 15px;
-  border-top: 1px solid #e6e6e6;
+.message {
+  margin-bottom: 15px;
 }
 
-.search-bar {
-  margin-bottom: 20px;
+.message-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
 }
-.search-input {
-  width: 500px;
+
+.message-right {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 10px;
 }
-.merchant-card {
-  margin-bottom: 20px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-.card-content {
+
+.circular-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-}
-
-.avatar-container {
-  width: 150px; /* 正方形头像区域 */
-  height: 150px;
-  overflow: hidden;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
-.merchant-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.ai-avatar {
+  background-color: #409eff;
 }
 
-.image-container {
-  position: relative;
-  width: 100%;
-  padding-top: 75%; /* 4:3 宽高比 */
-  overflow: hidden;
+.me-avatar {
+  background-color: #67c23a;
+}
+
+.message-bubble {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  line-height: 1.5;
+}
+
+.message-left .message-bubble {
+  background: white;
+  border: 1px solid #e5e7eb;
+}
+
+.message-right .message-bubble {
+  background: white;
+  color: black;
+}
+
+.recommended-dishes {
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.recommended-dishes h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.recommended-dishes ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recommended-dishes li {
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+/* 输入区样式 */
+.chat-input {
+  border-top: 1px solid #e5e7eb;
+  padding: 16px;
+}
+
+.input-container {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.send-btn {
+  height: 72px;
+  width: 50px;
+  padding: 0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.send-btn .icon {
+  font-size: 20px;
+}
+
+/* 最小化样式 */
+.minimized-chat {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  background: #409eff; /* 蓝色背景 */
+  border-radius: 50%;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.minimized-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #409eff; /* 蓝色背景 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.minimized-title {
+  color: white;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* 商家卡片样式 */
+.merchant-card {
+  margin-bottom: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.merchant-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.card-content {
+  display: flex;
+  padding: 16px;
+  gap: 20px;
 }
 
 .merchant-image {
   width: 120px;
   height: 120px;
   object-fit: cover;
-  margin-right: 20px;
-  border-radius: 4px;
+  border-radius: 6px;
+  flex-shrink: 0;
 }
 
-/* 悬停效果 */
-.merchant-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px 0 rgba(0,0,0,.1);
-}
 .merchant-info {
   flex: 1;
 }
 
-.merchant-info h3 {
-  margin: 0;
-  font-size: 18px;
-  margin-bottom: 8px;
-}
-.description {
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 8px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.rating {
-  margin: 8px 0;
-}
 .price-range {
   display: flex;
-  justify-content: space-between;
+  gap: 15px;
+  margin-top: 8px;
   color: #666;
-  font-size: 14px;
 }
 
-.el-pagination {
-  margin-top: 20px;
-  text-align: right;
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+  }
+
+  .chat-container {
+    width: 100%;
+    height: 60vh;
+    margin-top: 20px;
+  }
+
+  .send-btn {
+    height: 66px;
+    width: 45px;
+  }
 }
-.dishes-container {
-  max-height: 60vh;
-  overflow-y: auto;
-}
-.dish-card {
-  margin-bottom: 20px;
-}
-.dish-image {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-}
-.dish-info {
-  padding: 14px;
-}
-.dish-info h4 {
-  margin: 0;
-  font-size: 16px;
-}
-.price-action {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-}
-.price {
-  color: #f56c6c;
-  font-size: 18px;
-  font-weight: bold;
-}
-.cart-summary {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: #fff;
-  padding: 15px 20px;
-  box-shadow: 0 -2px 10px rgba(0,0,0,.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.total-info {
-  display: flex;
-  align-items: center;
-}
-.total-price {
-  margin-left: 20px;
-  color: #f56c6c;
-  font-size: 20px;
-  font-weight: bold;
-}
-</style> 
+</style>

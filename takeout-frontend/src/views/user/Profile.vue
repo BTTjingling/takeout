@@ -24,9 +24,6 @@
           <el-form-item label="邮箱" prop="email">
             <el-input v-model="form.email" />
           </el-form-item>
-          <el-form-item label="收货地址" prop="address">
-            <el-input type="textarea" v-model="form.address" />
-          </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="submitForm">保存修改</el-button>
           </el-form-item>
@@ -39,15 +36,21 @@
           <span>修改密码</span>
         </template>
         <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-width="100px">
+          <!-- 原密码输入框 -->
           <el-form-item label="原密码" prop="oldPassword">
-            <el-input type="password" v-model="passwordForm.oldPassword" />
+            <el-input placeholder="请输入原密码" v-model="passwordForm.oldPassword" show-password/>
           </el-form-item>
+
+          <!-- 新密码输入框 -->
           <el-form-item label="新密码" prop="newPassword">
-            <el-input type="password" v-model="passwordForm.newPassword" />
+            <el-input placeholder="请输入新密码" v-model="passwordForm.newPassword" show-password/>
           </el-form-item>
+
+          <!-- 确认密码输入框 -->
           <el-form-item label="确认密码" prop="confirmPassword">
-            <el-input type="password" v-model="passwordForm.confirmPassword" />
+            <el-input placeholder="请输入确认密码" v-model="passwordForm.confirmPassword" show-password/>
           </el-form-item>
+
           <el-form-item>
             <el-button type="primary" @click="submitPasswordForm">修改密码</el-button>
           </el-form-item>
@@ -140,12 +143,13 @@
       return {
         activeTab: 'personal', // 默认选中个人资料
         form: {
+          userId: '',
           username: '',
           phone: '',
-          email: '',
-          address: ''
+          email: ''
         },
         passwordForm: {
+          userId: '',
           oldPassword: '',
           newPassword: '',
           confirmPassword: ''
@@ -173,19 +177,29 @@
         },
         passwordRules: {
           oldPassword: [
-            { required: true, message: '请输入原密码', trigger: 'blur' }
-          ],
-          newPassword: [
-            { required: true, message: '请输入新密码', trigger: 'blur' }
-          ],
-          confirmPassword: [
-            { required: true, message: '请确认密码', trigger: 'blur' }
-          ]
+          { required: true, message: '请输入原密码', trigger: 'blur' }
+        ],
+        newPassword: [
+          { required: true, message: '请输入新密码', trigger: 'blur' },
+          { pattern: /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, message: '密码必须包含字母、数字和特殊字符，并且至少8位', trigger: 'blur' }
+        ],
+        confirmPassword: [
+          { required: true, message: '请确认新密码', trigger: 'blur' },
+          { validator: this.checkConfirmPassword, trigger: 'blur' }
+        ]
         },
         userId: JSON.parse(localStorage.getItem('userInfo') || '{}').userId  // 从 localStorage 获取 userId
       }
     },
     methods: {
+      // 验证确认密码是否一致
+      checkConfirmPassword(rule, value, callback) {
+        if (value !== this.passwordForm.newPassword) {
+          callback(new Error('两次输入的密码不一致'));
+        } else {
+          callback();
+        }
+      },
       async fetchUserInfo() {
         try {
           const res = await getUserInfo(this.userId);
@@ -253,14 +267,25 @@
       },
       async submitForm() {
         if (!this.$refs.formRef) return;
+
+        // 先验证表单
         this.$refs.formRef.validate(async (valid) => {
           if (valid) {
             try {
-              await updateUserInfo(this.form);
-              ElMessage.success('保存成功');
+              // 提交表单前，确保将 userId 添加到 form 中
+              this.form.userId = this.userId;
+
+              // 调用更新用户信息的 API 函数
+              const response = await updateUserInfo(this.form);
+              console.log(response);
+              ElMessage.success('个人信息修改成功');
             } catch (error) {
-              console.error('更新用户信息失败:', error);
+              // 捕获异常（如网络错误）
+              ElMessage.error('个人信息修改失败');
             }
+          } else {
+            // 如果表单验证失败，显示错误消息
+            ElMessage.error('表单验证失败，请检查输入项');
           }
         });
       },
@@ -269,16 +294,16 @@
         this.$refs.passwordFormRef.validate(async (valid) => {
           if (valid) {
             try {
-              await changePassword({
-                oldPassword: this.passwordForm.oldPassword,
-                newPassword: this.passwordForm.newPassword
-              });
-              ElMessage.success('密码修改成功');
+              this.passwordForm.userId = this.userId;
+              await changePassword(this.passwordForm);
+              ElMessage.success('密码修改成功，请重新登录！！！');
               this.passwordForm = {
+                userId: '',
                 oldPassword: '',
                 newPassword: '',
                 confirmPassword: ''
               };
+              this.$router.push('/login');
             } catch (error) {
               console.error('修改密码失败:', error);
             }

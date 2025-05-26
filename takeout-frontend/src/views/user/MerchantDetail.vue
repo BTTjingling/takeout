@@ -49,34 +49,107 @@
     </div>
 
     <div class="cart-summary" v-if="totalQuantity > 0">
-      <div class="total-info">
-        <span>已选 {{ totalQuantity }} 件商品</span>
-        <span class="total-price">合计：¥{{ totalPrice }}</span>
-        <span v-if="!meetsMinPrice" class="min-price-warning">(菜品总价未满足起送价¥{{ merchant.minprice }})</span>
+        <div class="cart-icon" @click.stop="drawerVisible = true">
+            <el-badge :value="totalQuantity" :max="99" class="item">
+              <el-icon :size="24"><ShoppingCart /></el-icon>
+            </el-badge>
+        </div>
+        <div class="total-info">
+          <span>已选 {{ totalQuantity }} 件商品</span>
+          <span class="total-price">合计：¥{{ totalPrice }}</span>
+          <span v-if="!meetsMinPrice" class="min-price-warning">(菜品总价未满足起送价¥{{ merchant.minprice }})</span>
+        </div>
+        <el-button
+            type="primary"
+            @click.stop="submitOrder"
+            :disabled="!meetsMinPrice"
+        >
+          提交订单
+        </el-button>
       </div>
-      <el-button
-          type="primary"
-          @click="submitOrder"
-          :disabled="!meetsMinPrice"
-      >
-        提交订单
-      </el-button>
-    </div>
+    <!-- 购物车抽屉 -->
+    <el-drawer
+      v-model="drawerVisible"
+      title="购物车"
+      direction="btt"
+      size="60%"
+      :modal="true"
+      :show-close="true"
+      :wrapperClosable="true"
+      custom-class="cart-drawer"
+    >
+      <div class="cart-content">
+        <el-table :data="cartItems" style="width: 100%">
+          <el-table-column prop="name" label="菜品名称" />
+          <el-table-column label="数量" width="120" align="center">
+            <template #default="{row}">
+              <el-input-number
+                v-model="row.quantity"
+                :min="1"
+                :max="99"
+                size="small"
+                @change="updateCartItem(row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="小计" width="120" align="right">
+            <template #default="{row}">
+              ¥{{ (row.price * row.quantity).toFixed(2) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="80">
+            <template #default="{row}">
+              <el-button type="danger" size="small" @click="removeFromCart(row)" circle>
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div class="price-summary">
+          <div class="price-row">
+            <span>商品总价：</span>
+            <span>¥{{ cartSubtotal.toFixed(2) }}</span>
+          </div>
+          <div class="price-row">
+            <span>配送费：</span>
+            <span>¥{{ merchant.devfee || 0 }}</span>
+          </div>
+          <div class="price-row total">
+            <span>合计：</span>
+            <span>¥{{ (cartSubtotal + Number(merchant.devfee || 0)).toFixed(2) }}</span>
+          </div>
+        </div>
+
+        <div class="checkout-btn">
+          <el-button
+            type="primary"
+            size="large"
+            @click="submitOrder"
+            :disabled="!meetsMinPrice"
+          >
+            提交订单
+          </el-button>
+        </div>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getMerchantDetail, getDishList } from '@/api/user'
 import { createOrder } from '@/api/order'
 import { ElMessage } from 'element-plus'
+import { ShoppingCart, Delete } from '@element-plus/icons-vue'
 import { getAvailableDishes } from '@/api/dish'
 const route = useRoute()
 const merchant = ref({})
 const dishes = ref([])
 const cart = ref({})
-
+const drawerVisible = ref(false)
+const router = useRouter()
 const totalQuantity = computed(() => {
   const quantity = Object.values(cart.value).reduce((sum, quantity) => sum + quantity, 0);
   console.log('计算总数量:', quantity); // 打印计算的总数量
@@ -126,74 +199,87 @@ const fetchDishes = async () => {
 };
 
 const handleQuantityChange = (dish) => {
-  console.log('当前菜品:', dish); // 打印当前菜品信息
-  console.log('更新前购物车:', cart.value); // 打印更新前的购物车状态
-
   if (dish.quantity > 0) {
-    cart.value[dish.dishId] = dish.quantity; // 使用 dish.dishId 作为键
+    cart.value[dish.dishId] = dish.quantity;
   } else {
     delete cart.value[dish.dishId];
+    dish.quantity = 0; // 确保同步设置为0
   }
-
-  console.log('更新后购物车:', cart.value); // 打印更新后的购物车状态
-  console.log('总数量:', totalQuantity.value); // 打印总数量
-  console.log('总价:', totalPrice.value); // 打印总价
-};
-
+}
 const submitOrder = async () => {
   if (totalQuantity.value === 0) {
     ElMessage.warning('请选择菜品');
     return;
   }
-
-  console.log('开始提交订单，购物车内容:', cart.value);
-
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+  const userId = userInfo.userId
   const orderItems = Object.entries(cart.value).map(([dishId, quantity]) => {
-    console.log('正在处理菜品ID:', dishId, '数量:', quantity);
     const dish = dishes.value.find(d => d.dishId === parseInt(dishId));
-    if (!dish) {
-      console.error('未找到菜品:', dishId);
-      return null;
-    }
-    return {
+    return dish ? {
       dishId: parseInt(dishId),
+      name: dish.name,
       quantity,
       price: dish.price
-    };
-  }).filter(item => item !== null);
+    } : null;
+  }).filter(Boolean);
 
-  console.log('生成的订单项:', orderItems);
+  // 准备结算页数据
+  const checkoutData = {
+    merchantName: merchant.value.name,
+    merchantId: merchant.value.id,
+    items: orderItems,
+    userId: parseInt(userId),
+    shopId: route.params.shopId,
+    subtotal: orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+    deliveryFee: Number(merchant.value.devfee) || 0,
+    total: 0
+  };
+  checkoutData.total = checkoutData.subtotal + checkoutData.deliveryFee;
 
-  if (orderItems.length === 0) {
-    ElMessage.error('未找到有效的菜品，请重新选择');
-    return;
-  }
+  // 跳转到结算页
+  router.push({
+    name: 'Checkout',
+    state: { checkoutData }
+  });
 
-  try {
-    for (const item of orderItems) {
-      const orderData = {
-        userId: 1, // 这里需要替换为实际的用户ID
-        shopId: parseInt(route.params.shopId),
-        dishId: item.dishId,
-        quantity: item.quantity,
-        totalAmount: item.price * item.quantity,
-        orderTime: new Date()
-      };
-
-      console.log('提交的订单数据:', orderData);
-      await createOrder(orderData); // 为每个商品单独调用一次 createOrder
-    }
-    // 重置购物车
-    cart.value = {};
-    // 重置菜品数量
-    dishes.value.forEach(dish => dish.quantity = 0);
-    ElMessage.success('订单提交成功');
-    //router.push('/user/orders');
-  } catch (error) {
-    console.error('提交订单失败:', error);
-  }
+  // 重置购物车
+  cart.value = {};
+  dishes.value.forEach(dish => dish.quantity = 0);
 };
 
+const cartItems = computed(() => {
+  return dishes.value
+    .filter(dish => cart.value[dish.dishId] > 0)
+    .map(dish => ({
+      ...dish,
+      quantity: cart.value[dish.dishId] || 0
+    }));
+});
+
+const cartSubtotal = computed(() => {
+  return cartItems.value.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+})
+
+const updateCartItem = (dish) => {
+  if (dish.quantity > 0) {
+    cart.value[dish.dishId] = dish.quantity;
+  } else {
+    delete cart.value[dish.dishId];
+  }
+  // 同步更新菜品列表中的数量
+  const targetDish = dishes.value.find(d => d.dishId === dish.dishId);
+  if (targetDish) {
+    targetDish.quantity = dish.quantity;
+  }
+}
+
+const removeFromCart = (dish) => {
+  delete cart.value[dish.dishId];
+  const targetDish = dishes.value.find(d => d.dishId === dish.dishId);
+  if (targetDish) {
+    targetDish.quantity = 0;
+  }
+}
 
 onMounted(() => {
   fetchMerchantDetail()
@@ -242,11 +328,14 @@ onMounted(() => {
 
 .dishes-container {
   margin-bottom: 100px;
+  padding-bottom: 80px;
 }
 
 .dish-card {
   width: 200px;
   margin-bottom: 20px;
+  position: relative; /* 确保内部元素定位正确 */
+  z-index: 1;
 }
 
 .dish-image {
@@ -277,7 +366,6 @@ onMounted(() => {
   font-size: 18px;
   font-weight: bold;
 }
-
 .cart-summary {
   position: fixed;
   bottom: 0;
@@ -289,11 +377,13 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  z-index: 1000;
 }
 
 .total-info {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
 }
 
 .total-price {
@@ -302,4 +392,58 @@ onMounted(() => {
   font-size: 20px;
   font-weight: bold;
 }
+/* 添加新的样式 */
+.cart-icon {
+  margin-right: 20px;
+  cursor: pointer;
+}
+
+.cart-content {
+   height: 100%;
+   display: flex;
+   flex-direction: column;
+ }
+.price-summary {
+  margin-top: 20px;
+  padding: 0 20px;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+}
+.price-label {
+  min-width: 80px;
+}
+
+.price-value {
+  font-weight: bold;
+}
+
+.price-row.total .price-value {
+  color: #f56c6c;
+  font-size: 18px;
+}
+
+.checkout-btn {
+  margin-top: 20px;
+  text-align: center;
+}
+:deep(.cart-drawer) {
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.cart-drawer .el-drawer__header) {
+  margin-bottom: 0;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+:deep(.cart-drawer .el-drawer__body) {
+  padding: 0;
+}
+
 </style>

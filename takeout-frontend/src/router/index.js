@@ -3,6 +3,12 @@ import UserHome from '@/views/user/Home.vue'
 // 路由配置
 const routes = [
   {
+    path: '/checkout',
+    name: 'Checkout',
+    component: () => import('@/views/user/Checkout.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/Login.vue'),
