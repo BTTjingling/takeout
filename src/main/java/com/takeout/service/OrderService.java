@@ -12,6 +12,9 @@ public interface OrderService extends IService<Order> {
      */
     Page<Order> getAllOrders(Page<Order> page);
     Page<Order> getOrdersByUserId(Long userId, Page<Order> page);
+
+    // 如果不需要无筛选版本，可以移除这个方法
+
     /**
      * 更新订单状态
      * @param orderId 订单 ID
@@ -19,7 +22,8 @@ public interface OrderService extends IService<Order> {
      * @return 更新是否成功
      */
     boolean updateOrderStatus(Long orderId, String newStatus);
-    Page<Order> getOrdersByShopId(Long shopId, Page<Order> page);
+    Page<Order> getOrdersByShopId(Long shopId, Page<Order> page,
+                                  String orderId, String userId, String status);
     /**
      * 用户取消订单
      * @param orderId 订单 ID

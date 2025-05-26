@@ -144,7 +144,7 @@ export default {
   },
   methods: {
     getStatusText(ostatus) {
-      const statusList = ["未接单", "已接单制作中", "配送中", "已完成", "用户已取消", "商家已取消"];
+      const statusList = ["未接单", "制作中", "配送中", "已完成", "用户已取消", "商家已取消"];
       return statusList[parseInt(ostatus) - 1] || "未知状态";
     },
     // 新增：标签颜色映射方法
