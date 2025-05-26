@@ -9,6 +9,8 @@ import com.takeout.mapper.OrderMapper;
 import com.takeout.service.OrderService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements OrderService {
 
@@ -22,7 +24,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Override
     public Page<Order> getOrdersByUserId(Long userId, Page<Order> page) {
-        return null;
+        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId);
+        queryWrapper.orderByDesc("order_time");
+        return baseMapper.selectPage(page, queryWrapper);
     }
 
     @Override
@@ -62,5 +67,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         updateWrapper.eq("order_id", orderId);
         updateWrapper.set("ostatus", "用户已取消");
         return this.update(updateWrapper);
+    }
+
+    @Override
+    public List<Order> getOrdersByUserId(Long userId) {
+        return null;
     }
 }

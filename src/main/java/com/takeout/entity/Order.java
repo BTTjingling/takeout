@@ -41,8 +41,13 @@ public class Order {
     @TableField("Ostatus")
     private String Ostatus;
     public static final List<String> ALLOWED_STATUSES = Arrays.asList(
-            "未接单", "制作中", "配送中", "已完成", "用户已取消","商家已取消"
+            "待接单", "制作中", "配送中", "已完成", "用户已取消","商家已取消"
     );
+    @TableField(exist = false)
+    private String merchantName;
+
+    @TableField(exist = false)
+    private String dishName;
     public boolean isValidStatus() {
         return ALLOWED_STATUSES.contains(Ostatus);
     }

@@ -143,21 +143,31 @@ export default {
     }
   },
   methods: {
+    // 直接根据后端返回的字符串状态值映射显示文本
     getStatusText(ostatus) {
-      const statusList = ["未接单", "制作中", "配送中", "已完成", "用户已取消", "商家已取消"];
-      return statusList[parseInt(ostatus) - 1] || "未知状态";
+      // 与后端Order类中的ALLOWED_STATUSES保持一致
+      const statusMap = {
+        "待接单": "待接单",
+        "制作中": "制作中",
+        "配送中": "配送中",
+        "已完成": "已完成",
+        "用户已取消": "用户已取消",
+        "商家已取消": "商家已取消"
+      };
+      return statusMap[ostatus] || "未知状态";
     },
-    // 新增：标签颜色映射方法
+
+// 直接根据后端返回的字符串状态值映射标签类型
     getTagType(ostatus) {
-      switch (ostatus) {
-        case "1": return "info";     // 未接单 - 蓝色
-        case "2": return "primary";  // 已接单制作中 - 紫色
-        case "3": return "warning";  // 配送中 - 黄色
-        case "4": return "success";  // 已完成 - 绿色
-        case "5": return "danger";   // 用户已取消 - 红色
-        case "6": return "danger";   // 商家已取消 - 红色
-        default: return "default";   // 未知状态 - 灰色
-      }
+      const tagTypeMap = {
+        "待接单": "info",
+        "制作中": "primary",
+        "配送中": "warning",
+        "已完成": "success",
+        "用户已取消": "danger",
+        "商家已取消": "danger"
+      };
+      return tagTypeMap[ostatus] || "default";
     },
 
     async fetchUserData() {

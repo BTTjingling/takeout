@@ -41,7 +41,7 @@
               查看详情
             </el-button>
             <el-button
-              v-if="row.ostatus === '未接单'"
+              v-if="row.ostatus === '待接单'"
               type="danger"
               size="small"
               @click="handleCancelOrder(row)"
@@ -166,7 +166,7 @@ const handleCurrentChange = (val) => {
 
 const getStatusType = (status) => {
   const types = {
-    '未接单': 'warning',
+    '待接单': 'warning',
     '已接单制作中': 'info',
     '配送中': 'primary',
     '已完成': 'success',
@@ -178,7 +178,7 @@ const getStatusType = (status) => {
 
 const getStatusText = (status) => {
   const texts = {
-    '未接单': '未接单',
+    '待接单': '待接单',
     '已接单制作中': '已接单制作中',
     '配送中': '配送中',
     '已完成': '已完成',

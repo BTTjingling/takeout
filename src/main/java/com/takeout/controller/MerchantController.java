@@ -28,7 +28,7 @@ import com.takeout.dto.UpdateStatusRequest;
 @RequestMapping("/api/merchants")
 public class MerchantController {
     private static final Logger logger = LoggerFactory.getLogger(MerchantServiceImpl.class);
-    private static final List<String> ALLOWED_STATUSES = Arrays.asList("未接单", "已接单制作中", "配送中", "已完成", "商家已取消","用户已取消");
+    private static final List<String> ALLOWED_STATUSES = Arrays.asList("待接单", "已接单制作中", "配送中", "已完成", "商家已取消","用户已取消");
     @Autowired
     private OrderService orderService;
     @Autowired
