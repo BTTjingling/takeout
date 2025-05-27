@@ -4,42 +4,47 @@
       <div class="content-left">
         <div class="search-bar">
           <el-input
-              v-model="searchKeyword"
-              placeholder="搜索商家或菜品"
-              class="search-input"
-              @keyup.enter="handleSearch"
-              clearable
+            v-model="searchKeyword"
+            placeholder="搜索商家或菜品"
+            class="search-input"
+            @keyup.enter="handleSearch"
+            clearable
           >
-            <template #append>
-              <el-button @click="handleSearch">
-                <el-icon><Search /></el-icon>
-              </el-button>
-            </template>
           </el-input>
+          <div class="search-buttons">
+            <el-button @click="handleSearch">
+              <el-icon><Search /></el-icon>
+              搜索
+            </el-button>
+            <el-button @click="startSpeechRecognition">
+              <el-icon><Microphone /></el-icon>
+              语音输入
+            </el-button>
+          </div>
         </div>
 
         <el-row :gutter="20">
           <el-col :span="24" v-for="merchant in merchants" :key="merchant.id">
             <el-card
-                class="merchant-card"
-                :body-style="{ padding: '0px' }"
-                @click="goToMerchant(merchant.shopId)"
+              class="merchant-card"
+              :body-style="{ padding: '0px' }"
+              @click="goToMerchant(merchant.shopId)"
             >
               <div class="card-content">
                 <img
-                    :src="getAvatarUrl(merchant.avatar)"
-                    class="merchant-image"
-                    @error="handleImageError"
+                  :src="getAvatarUrl(merchant.avatar)"
+                  class="merchant-image"
+                  @error="handleImageError"
                 >
                 <div class="merchant-info">
                   <h3>{{ merchant.name }}</h3>
                   <p class="description">{{ merchant.description }}</p>
                   <div class="rating">
                     <el-rate
-                        v-model="merchant.rating"
-                        disabled
-                        show-score
-                        text-color="#ff9900"
+                      v-model="merchant.rating"
+                      disabled
+                      show-score
+                      text-color="#ff9900"
                     />
                   </div>
                   <div class="price-range">
@@ -53,13 +58,13 @@
         </el-row>
 
         <el-pagination
-            v-model:current-page="page"
-            v-model:page-size="size"
-            :page-sizes="[8, 16, 24, 32]"
-            :total="total"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
+          v-model:current-page="page"
+          v-model:page-size="size"
+          :page-sizes="[8, 16, 24, 32]"
+          :total="total"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
         />
       </div>
 
@@ -71,9 +76,9 @@
 
         <div class="chat-messages" ref="chatMessages">
           <div
-              class="message"
-              v-for="(msg, index) in chatMessagesArr"
-              :key="index"
+            class="message"
+            v-for="(msg, index) in chatMessagesArr"
+            :key="index"
           >
             <!-- AI消息 -->
             <div v-if="msg.from === 'ai'" class="message-left">
@@ -112,20 +117,29 @@
         <div class="chat-input">
           <div class="input-container">
             <el-input
-                v-model="message"
-                type="textarea"
-                :rows="3"
-                placeholder="输入您的问题..."
-                @keyup.enter.ctrl="sendMessage"
-                resize="none"
+              v-model="message"
+              type="textarea"
+              :rows="3"
+              placeholder="输入您的问题..."
+              @keyup.enter.ctrl="sendMessage"
+              resize="none"
             ></el-input>
-            <el-button
+            <div class="chat-buttons">
+              <el-button
                 class="send-btn"
                 type="primary"
                 @click="sendMessage"
-            >
-              <el-icon class="icon"><Promotion /></el-icon>
-            </el-button>
+              >
+                <el-icon class="icon"><Promotion /></el-icon>
+                发送
+              </el-button>
+              <el-button
+                @click="startChatSpeechRecognition"
+              >
+                <el-icon><Microphone /></el-icon>
+                语音输入
+              </el-button>
+            </div>
           </div>
         </div>
       </div>
@@ -133,9 +147,9 @@
 
     <!-- 最小化按钮 -->
     <div
-        class="minimized-chat"
-        v-show="isChatMinimized"
-        @click="restoreChat"
+      class="minimized-chat"
+      v-show="isChatMinimized"
+      @click="restoreChat"
     >
       <div class="minimized-avatar">
         {{ minimizedTitle }}
@@ -148,7 +162,7 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search, Promotion } from '@element-plus/icons-vue'
+import { Search, Promotion, Microphone } from '@element-plus/icons-vue'
 import { getMerchantList, searchMerchantsByDishName, getDishRecommendations } from '@/api/user'
 import { ElMessage } from 'element-plus'
 
@@ -168,6 +182,105 @@ const chatContainer = ref(null)
 const chatMessages = ref(null)
 const chatMessagesArr = ref([])
 const minimizedTitle = ref('AI')
+
+// 语音识别相关
+const recognition = ref(null)
+const isListening = ref(false)
+const chatRecognition = ref(null)
+const isChatListening = ref(false)
+
+// 初始化搜索框语音识别
+const initSpeechRecognition = () => {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (!SpeechRecognition) {
+    ElMessage.warning('您的浏览器不支持语音输入功能')
+    return null
+  }
+  const rec = new SpeechRecognition()
+  rec.lang = 'zh-CN' // 设置语言为中文
+  rec.interimResults = false // 只返回最终结果
+
+  rec.onstart = () => {
+    isListening.value = true
+    ElMessage.info('开始语音输入，请说话...')
+  }
+
+  rec.onresult = (event) => {
+    const transcript = event.results[0][0].transcript
+    // 只将识别结果填充到搜索框，不直接触发搜索
+    searchKeyword.value = transcript
+  }
+
+  rec.onerror = (event) => {
+    ElMessage.error(`语音识别出错: ${event.error}`)
+  }
+
+  rec.onend = () => {
+    isListening.value = false
+  }
+
+  return rec
+}
+
+// 开始搜索框语音识别
+const startSpeechRecognition = () => {
+  if (!recognition.value) {
+    recognition.value = initSpeechRecognition()
+  }
+  if (recognition.value) {
+    try {
+      recognition.value.start()
+    } catch (error) {
+      ElMessage.error('启动语音识别失败，请重试')
+    }
+  }
+}
+
+// 初始化聊天框语音识别
+const initChatSpeechRecognition = () => {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (!SpeechRecognition) {
+    ElMessage.warning('您的浏览器不支持语音输入功能')
+    return null
+  }
+  const rec = new SpeechRecognition()
+  rec.lang = 'zh-CN'
+  rec.interimResults = false
+
+  rec.onstart = () => {
+    isChatListening.value = true
+    ElMessage.info('聊天语音输入开始，请说话...')
+  }
+
+  rec.onresult = (event) => {
+    const transcript = event.results[0][0].transcript
+    message.value = transcript
+  }
+
+  rec.onerror = (event) => {
+    ElMessage.error(`聊天语音识别出错: ${event.error}`)
+  }
+
+  rec.onend = () => {
+    isChatListening.value = false
+  }
+
+  return rec
+}
+
+// 开始聊天框语音识别
+const startChatSpeechRecognition = () => {
+  if (!chatRecognition.value) {
+    chatRecognition.value = initChatSpeechRecognition()
+  }
+  if (chatRecognition.value) {
+    try {
+      chatRecognition.value.start()
+    } catch (error) {
+      ElMessage.error('启动聊天语音识别失败，请重试')
+    }
+  }
+}
 
 // 获取商家列表
 const fetchMerchants = async () => {
@@ -324,6 +437,21 @@ onMounted(() => {
   overflow-y: auto;
 }
 
+.search-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.search-input {
+  width: 100%;
+}
+
+.search-buttons {
+  display: flex;
+  gap: 10px;
+}
+
 /* 聊天容器样式 */
 .chat-container {
   width: 400px;
@@ -450,8 +578,14 @@ onMounted(() => {
 
 .input-container {
   display: flex;
+  flex-direction: column;
   gap: 12px;
-  align-items: flex-end;
+}
+
+.chat-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .send-btn {

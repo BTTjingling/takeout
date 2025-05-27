@@ -1,5 +1,6 @@
 package com.takeout.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.takeout.entity.Dish;
@@ -51,8 +52,8 @@ public class MerchantChatServiceImpl implements MerchantChatService {
             // 获取商家的菜品信息
             List<Dish> dishes = dishService.getDishesByShopId(merchantId, null).getRecords();
 
-            // 获取商家所有订单信息
-            List<Order> orders = orderService.getOrdersByShopId(merchantId, null).getRecords();
+            Page<Order> orderPage = new Page<>(1, Integer.MAX_VALUE); // 获取第一页，最大数量的记录
+            List<Order> orders = orderService.getOrdersByShopId(merchantId, orderPage, null, null, null).getRecords();
 
             // 构建请求提示语
             String prompt = String.format("你是一位专业的餐饮运营顾问。请基于以下商家 %s（ID：%d）的现有相关数据给出回答，无需提及需要更多数据。菜品信息：%s，所有订单信息：%s。问题：%s",
