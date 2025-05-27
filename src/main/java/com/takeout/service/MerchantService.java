@@ -14,4 +14,5 @@ public interface MerchantService extends IService<Merchant> {
     void updateMerchantStatus(Integer shopId, Integer status);
     Page<Merchant> getAllMerchants(Page<Merchant> page);
     boolean changePassword(ChangePasswordRequest request);
+    Integer getTotalDishes(Long shopId);
 }

@@ -6,6 +6,7 @@ import com.takeout.entity.Order;
 
 import java.util.List;
 import java.util.Date;
+import java.util.Map;
 
 
 public interface OrderService extends IService<Order> {
@@ -36,4 +37,8 @@ public interface OrderService extends IService<Order> {
      * @return 用户订单列表
      */
     List<Order> getOrdersByUserId(Long userId);
+    Integer getTodayOrderCount(Long shopId);
+    Double getTodayRevenue(Long shopId);
+    long countPendingOrders(Long shopId);
+    Map<String, Double> getRevenueLast7Days(Long shopId);
     }

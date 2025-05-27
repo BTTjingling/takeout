@@ -5,8 +5,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.takeout.dto.ChangePasswordRequest;
 import com.takeout.dto.RegisterRequest;
+import com.takeout.entity.Dish;
 import com.takeout.entity.Merchant;
+import com.takeout.mapper.DishMapper;
 import com.takeout.mapper.MerchantMapper;
+import com.takeout.service.DishService;
 import com.takeout.service.MerchantService;
 import com.takeout.service.OrderService;
 import jakarta.annotation.Resource;
@@ -18,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.takeout.service.DishService;
 import java.math.BigDecimal;
 
 @Service
@@ -26,6 +30,8 @@ public class MerchantServiceImpl extends ServiceImpl<MerchantMapper, Merchant> i
 
     @Resource
     private MerchantMapper merchantMapper;
+    @Autowired
+    private DishMapper dishMapper;  //
     @Override
     public Merchant getMerchantById(Long shopId) throws NotFoundException {
         try {
@@ -111,6 +117,11 @@ public class MerchantServiceImpl extends ServiceImpl<MerchantMapper, Merchant> i
         merchant.setPassword(request.getNewPassword());
         int rows = merchantMapper.updateById(merchant);
         return rows > 0;
+    }
+    @Override
+    public Integer getTotalDishes(Long shopId) {
+        // 使用DishMapper来查询Dish实体
+        return dishMapper.countByShopId(shopId);
     }
 
 }

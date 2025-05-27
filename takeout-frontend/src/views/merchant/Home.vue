@@ -52,35 +52,29 @@
         <span>最近7天营业额统计</span>
       </div>
       <div class="chart-container">
-        <!-- 这里可以添加图表组件 -->
+        <v-chart :option="chartOptions" autoresize style="height: 100%;" />
       </div>
-    </el-card>
-
-    <el-card class="recent-orders">
-      <div slot="header" class="clearfix">
-        <span>最近订单</span>
-      </div>
-      <el-table :data="recentOrders" style="width: 100%">
-        <el-table-column prop="orderId" label="订单号" width="180"></el-table-column>
-        <el-table-column prop="createTime" label="下单时间" width="180"></el-table-column>
-        <el-table-column prop="amount" label="金额" width="100"></el-table-column>
-        <el-table-column prop="status" label="状态">
-          <template #default="scope">
-            <el-tag :type="getStatusType(scope.row.status)">
-              {{ getStatusText(scope.row.status) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
     </el-card>
   </div>
 </template>
 
 <script>
-import { getStatistics, getOrderList } from '@/api/merchant'
+import { defineComponent } from 'vue'
+import {
+  getTodayOrderCount,
+  getTotalDishes,
+  getTodayRevenue,
+  getPendingOrders,
+  getRevenueLast7Days
+} from '@/api/merchant'
+import 'echarts'
+import VChart from 'vue-echarts'
 
-export default {
+export default defineComponent({
   name: 'MerchantHome',
+  components: {
+    'v-chart': VChart
+  },
   props: ['shopId'],
   data() {
     return {
@@ -90,63 +84,80 @@ export default {
         totalDishes: 0,
         pendingOrders: 0
       },
-      recentOrders: [],
-      merchantInfo: {}
+      chartOptions: {
+        tooltip: {
+          trigger: 'axis'
+        },
+        xAxis: {
+          type: 'category',
+          data: []
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series: [
+          {
+            name: '营业额',
+            type: 'line',
+            data: [],
+            smooth: true,
+            areaStyle: {
+              color: '#cce5ff'
+            },
+            lineStyle: {
+              color: '#409EFF'
+            },
+            itemStyle: {
+              color: '#409EFF'
+            }
+          }
+        ]
+      }
     }
   },
-  // 添加生命周期钩子
-    mounted() {
-      console.log('当前店铺ID:', this.shopId)
-    },
+  mounted() {
+    console.log('当前店铺ID:', this.shopId)
+  },
   created() {
     this.fetchStatistics()
-    this.fetchRecentOrders()
+    this.fetchChartData()
   },
   methods: {
-    async fetchMerchantInfo(shopId) {
-        try {
-          const res = await getMerchantInfo(shopId); //使用 shopId 参数
-          this.merchantInfo = res.data;
-        } catch (error) {
-          console.error('获取商家信息失败:', error);
-        }
-      },
     async fetchStatistics() {
       try {
-        const res = await getStatistics(this.shopId)
-        this.statistics = res.data
+        const [todayOrdersRes, totalDishesRes, todayRevenueRes, pendingOrdersRes] = await Promise.all([
+          getTodayOrderCount(this.shopId),
+          getTotalDishes(this.shopId),
+          getTodayRevenue(this.shopId),
+          getPendingOrders(this.shopId)
+        ])
+
+        this.statistics = {
+          todayOrders: todayOrdersRes.data,
+          todayRevenue: todayRevenueRes.data,
+          totalDishes: totalDishesRes.data,
+          pendingOrders: pendingOrdersRes.data
+        }
       } catch (error) {
         console.error('获取统计数据失败:', error)
       }
     },
-    async fetchRecentOrders() {
+    async fetchChartData() {
       try {
-        const res = await getOrderList(this.shopId,{ page: 1, size: 5 })
-        this.recentOrders = res.data.records
+        const res = await getRevenueLast7Days(this.shopId)
+        const entries = Object.entries(res.data)
+
+        const days = entries.map(([date]) => date)
+        const revenues = entries.map(([, revenue]) => revenue)
+
+        this.chartOptions.xAxis.data = days
+        this.chartOptions.series[0].data = revenues
       } catch (error) {
-        console.error('获取最近订单失败:', error)
+        console.error('获取最近7天营业额失败:', error)
       }
-    },
-    getStatusType(status) {
-      const types = {
-        1: 'info',    // 待接单
-        2: 'warning', // 制作中
-        3: 'success', // 已完成
-        4: 'danger'   // 已取消
-      }
-      return types[status] || 'info'
-    },
-    getStatusText(status) {
-      const texts = {
-        1: '待接单',
-        2: '制作中',
-        3: '已完成',
-        4: '已取消'
-      }
-      return texts[status] || '未知状态'
     }
   }
-}
+})
 </script>
 
 <style scoped>
@@ -175,7 +186,4 @@ export default {
 .chart-container {
   height: 300px;
 }
-.recent-orders {
-  margin-bottom: 20px;
-}
-</style> 
+</style>
