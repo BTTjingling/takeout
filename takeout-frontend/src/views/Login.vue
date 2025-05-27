@@ -179,8 +179,11 @@ const goToRegister = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
-  opacity: 0.1;
+  background-image: url('/images/1.png');
+  background-size: cover; /* 让图片覆盖整个容器 */
+  background-position: center; /* 图片居中显示 */
+  background-repeat: no-repeat; /* 不重复显示图片 */
+  opacity: 0.8; /* 设置图片透明度 */
   z-index: 0;
 }
 
