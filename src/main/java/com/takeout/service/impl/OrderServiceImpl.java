@@ -7,13 +7,16 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.takeout.entity.Order;
 import com.takeout.mapper.OrderMapper;
 import com.takeout.service.OrderService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.*;
 
 @Service
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements OrderService {
-
+    @Autowired
+    private OrderMapper orderMapper;
     @Override
     public Page<Order> getAllOrders(Page<Order> page) {
         QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
@@ -48,10 +51,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         return baseMapper.selectPage(page, queryWrapper);
     }
-
-    // 如果不需要无筛选版本，可以移除这个方法
-
-
     @Override
     public boolean updateOrderStatus(Long orderId, String newStatus) {
         UpdateWrapper<Order> updateWrapper = new UpdateWrapper<>();
@@ -68,9 +67,62 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         updateWrapper.set("ostatus", "用户已取消");
         return this.update(updateWrapper);
     }
-
     @Override
     public List<Order> getOrdersByUserId(Long userId) {
         return null;
+    }
+    @Override
+    public Integer getTodayOrderCount(Long shopId) {
+        return orderMapper.countTodayOrdersByShopId(shopId, LocalDate.now());
+    }
+    @Override
+    public Double getTodayRevenue(Long shopId) {
+        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("SUM(total_amount) as total")
+                .eq("shop_id", shopId)
+                .ge("order_time", LocalDate.now().atStartOfDay())
+                .le("order_time", LocalDate.now().atTime(23, 59, 59));
+
+        Map<String, Object> result = getMap(queryWrapper);
+        if (result != null && result.get("total") != null) {
+            return ((BigDecimal) result.get("total")).doubleValue();
+        }
+        return 0.0;
+    }
+    @Override
+    public long countPendingOrders(Long shopId) {
+        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("shop_id", shopId)
+                .in("Ostatus", Arrays.asList("未接单", "已接单制作中", "配送中"));
+        return this.count(queryWrapper);
+    }
+    @Override
+    public Map<String, Double> getRevenueLast7Days(Long shopId) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(6);
+
+        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("DATE_FORMAT(order_time, '%Y-%m-%d') as date, SUM(total_amount) as amount")
+                .eq("shop_id", shopId)
+                .between("order_time", startDate.atStartOfDay(), endDate.atTime(23, 59, 59))
+                .groupBy("DATE_FORMAT(order_time, '%Y-%m-%d')")
+                .orderByAsc("date"); // 修改这里，直接使用别名排序
+
+        List<Map<String, Object>> result = baseMapper.selectMaps(queryWrapper);
+
+        Map<String, Double> revenueMap = new LinkedHashMap<>();
+        for (Map<String, Object> item : result) {
+            revenueMap.put(
+                    item.get("date").toString(),
+                    ((Number)item.get("amount")).doubleValue()
+            );
+        }
+
+        // 确保返回7天的数据，没有数据的日期填充0.0
+        for (int i = 0; i < 7; i++) {
+            String date = startDate.plusDays(i).toString();
+            revenueMap.putIfAbsent(date, 0.0);
+        }
+        return revenueMap;
     }
 }

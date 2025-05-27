@@ -10,7 +10,7 @@
             active-text-color="#ffd04b"
             router
         >
-          <el-menu-item index="/merchant/home">
+          <el-menu-item :index="`/merchant/home/${merchantInfo.id}`">
             <i class="el-icon-s-home"></i>
             <span slot="title">首页</span>
           </el-menu-item>
@@ -75,6 +75,10 @@ export default {
         if (userInfo.role === 'merchant' && userInfo.shopId) {
           const res = await getMerchantInfo(userInfo.shopId);
           this.merchantInfo = res.data;
+          // 确保商家ID被正确设置
+          if (!this.merchantInfo.id) {
+            this.merchantInfo.id = userInfo.shopId;
+          }
         } else {
           console.error('用户信息不完整或角色错误');
         }

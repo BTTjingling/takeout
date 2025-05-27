@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.io.File;
 import java.io.IOException;
@@ -103,6 +104,37 @@ public class MerchantController {
         }
         return merchantService.page(page, queryWrapper);
     }
+    @GetMapping("/dishes/total")
+    public Integer getTotalDishes(@RequestParam Long shopId) {
+        return merchantService.getTotalDishes(shopId);
+    }
+
+
+    @GetMapping("/revenue/today")
+    public Double getTodayRevenue(@RequestParam Long shopId) {
+        return orderService.getTodayRevenue(shopId);
+    }
+    @GetMapping("/orders/pending-count")
+    public Result<Long> getPendingOrdersCount(@RequestParam Long shopId) {
+        try {
+            long count = orderService.countPendingOrders(shopId);
+            return Result.success(count);
+        } catch (Exception e) {
+            logger.error("获取待处理订单数量失败，shopId: {}", shopId, e);
+            return Result.error(500, "获取待处理订单数量失败");
+        }
+    }
+    @GetMapping("/revenue/last7days")
+    public Result<Map<String, Double>> getRevenueLast7Days(@RequestParam Long shopId) {
+        try {
+            Map<String, Double> revenueData = orderService.getRevenueLast7Days(shopId);
+            return Result.success(revenueData);
+        } catch (Exception e) {
+            logger.error("获取7天营业额数据失败，shopId: {}", shopId, e);
+            return Result.error(500, "获取7天营业额数据失败");
+        }
+    }
+
     @PostMapping("/uploadAvatar")
     public ResponseEntity<?> uploadAvatar(@RequestParam Long shopId,
                                           @RequestParam("file") MultipartFile file) {

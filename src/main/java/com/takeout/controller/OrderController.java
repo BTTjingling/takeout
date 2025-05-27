@@ -4,10 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.takeout.entity.Order;
 import com.takeout.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.*;
+
 @CrossOrigin
 @RestController
 public class OrderController {
@@ -25,5 +23,9 @@ public class OrderController {
                                     @RequestParam(defaultValue = "10") Long pageSize) {
         Page<Order> page = new Page<>(pageNum, pageSize);
         return orderService.getAllOrders(page);
+    }
+    @GetMapping("/api/orders/todayCount")
+    public Integer getTodayOrderCount(@RequestParam Long shopId) {
+        return orderService.getTodayOrderCount(shopId);
     }
 }

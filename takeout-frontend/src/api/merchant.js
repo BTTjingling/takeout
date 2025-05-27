@@ -18,7 +18,52 @@ export function updateMerchantStatus(shopId, status) {
     }
   })
 }
-
+/**
+ * 获取商家今日订单数量
+ * @param {number} shopId 商家ID
+ * @returns {Promise} 包含今日订单数量的Promise
+ */
+export function getTodayOrderCount(shopId) {
+  return request({
+    url: 'orders/todayCount',
+    method: 'get',
+    params: {
+      shopId
+    }
+  })
+}
+export function getTotalDishes(shopId) {
+  return request({
+    url: '/merchants/dishes/total',
+    method: 'get',
+    params: {
+      shopId
+    }
+  })
+}
+export function getTodayRevenue(shopId) {
+  return request({
+    url: '/merchants/revenue/today',
+    method: 'get',
+    params: {
+      shopId
+    }
+  })
+}
+export function getPendingOrders(shopId) {
+  return request({
+    url: '/merchants/orders/pending-count',
+    method: 'get',
+    params: { shopId }
+  })
+}
+export function getRevenueLast7Days(shopId) {
+  return request({
+    url: '/merchants/revenue/last7days',
+    method: 'get',
+    params: { shopId }
+  })
+}
 
 // 修改商家信息
 export function updateMerchantInfo(shopId, data) {
